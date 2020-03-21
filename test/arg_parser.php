@@ -1,5 +1,6 @@
 <?php
 if (!isset($HELPER)) include './helper.php';
+if (!isset($APP_CODES)) include './app_codes.php';
 
 $ARG_PARSE = 1;
 
@@ -24,45 +25,66 @@ class CommandLineArguments
         return !$this->parseOnly && !$this->intOnly && !$this->help;
     }
 
-    // TODO Implement
+    // TODO Pokud je help == true, tak zakazat dalsi kombinace. Pokud bude, tak chyba 10.
+    // TODO Pokud už byl jednou parametr nastaven, tak další volání ignorovat.
+
     public function setHelp()
     {
+        $this->help = true;
     }
 
-    // TODO Implement
     public function setDirectory($dir)
     {
+        $this->checkExists($dir, true);
+        $this->directory = $dir;
     }
 
-    // TODO Implement
     public function setRecursive()
     {
+        $this->recursive = true;
     }
 
-    // TODO Implement
-    public function setParseScript($filename)
+    public function setParseScript($filepath)
     {
+        // TODO Muze se zde objevit i cesta?
+        // TODO Mame zohlednit parametr --directory?
+        $this->checkExists($filepath);
+        $this->parseScript = $filepath;
     }
 
-    // TODO Implement
-    public function setIntScript($filename)
+    public function setIntScript($filepath)
     {
+        // TODO Muze se zde objevit i cesta?
+        // TODO Mame zohlednit parametr --directory?
+        $this->checkExists($filepath);
+        $this->intScript = $filepath;
     }
 
-    // TODO Implement
     public function setParseOnly()
     {
+        // TODO Nepovolit kombinaci s --int-only, --int-script
+        $this->parseOnly = true;
     }
 
-    // TODO Implement
     public function setIntOnly()
     {
+        // TODO Nepovolit kombinaci s --parse-only, --parse-script
+
+        $this->intOnly = true;
     }
 
-    // TODO Implement
     public function setJexamxmlPath($path)
     {
+        $this->checkExists($path);
         $this->jexamxml = $path;
+    }
+
+    private function checkExists($path, $isDirectory = false)
+    {
+        if (!file_exists($path)) {
+            $type = $isDirectory ? 'Directory' : 'File';
+            throw new ErrorException("$type '$path' not exists", AppCodes::CannotOpenFileOrDirectory);
+        }
     }
 }
 
@@ -76,7 +98,7 @@ class CommandLineArgsParseService
         try {
             return $this->parseArguments($argv);
         } catch (ErrorException $e) {
-            // TODO Zabíjení aplikace, když nastane chyba.
+            Helper::errorExit($e->getCode(), $e->getMessage());
         }
     }
 
@@ -89,9 +111,6 @@ class CommandLineArgsParseService
     private function parseArguments($argv)
     {
         $args = new CommandLineArguments();
-
-        // TODO: Kombinování parametrů
-        // TODO: Duplicitní parametry.
 
         foreach (array_slice($argv, 1) as $arg) {
             switch ($arg) {
@@ -108,21 +127,20 @@ class CommandLineArgsParseService
                     $args->setIntOnly();
                     break;
                 default:
-                    if (Helper::startsWith($arg, 'directory')) {
+                    if (Helper::startsWith($arg, '--directory')) {
                         $args->setDirectory($this->getPathFromArgument($arg, 'directory'));
                         break;
-                    } elseif (Helper::startsWith($arg, 'parse-script')) {
+                    } elseif (Helper::startsWith($arg, '--parse-script')) {
                         $args->setParseScript($this->getPathFromArgument($arg, 'parse-script'));
                         break;
-                    } elseif (Helper::startsWith($arg, 'int-script')) {
+                    } elseif (Helper::startsWith($arg, '--int-script')) {
                         $args->setIntScript($this->getPathFromArgument($arg, 'int-script'));
                         break;
                     } elseif (Helper::startsWith($arg, '--jexamxml')) {
                         $args->setJexamxmlPath($this->getPathFromArgument($arg, 'jexamxml'));
                         break;
                     } else {
-                        echo $arg;
-                        exit(1); // TODO: Error code and message.
+                        break;
                     }
             }
         }
