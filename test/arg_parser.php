@@ -1,4 +1,8 @@
 <?php
+if (!isset($HELPER)) include './helper.php';
+
+$ARG_PARSE = 1;
+
 class CommandLineArguments
 {
     public $help = false;
@@ -20,36 +24,36 @@ class CommandLineArguments
         return !$this->parseOnly && !$this->intOnly && !$this->help;
     }
 
-    public function setHelp() {
-
+    public function setHelp()
+    {
     }
 
-    public function setDirectory($dir) {
-
+    public function setDirectory($dir)
+    {
     }
 
-    public function setRecursive() {
-
+    public function setRecursive()
+    {
     }
 
-    public function setParseScript($filename) {
-
+    public function setParseScript($filename)
+    {
     }
 
-    public function setIntScript($filename) {
-
+    public function setIntScript($filename)
+    {
     }
 
-    public function setParseOnly() {
-
+    public function setParseOnly()
+    {
     }
 
-    public function setIntOnly() {
-
+    public function setIntOnly()
+    {
     }
 
-    public function setJexamxmlPath($path) {
-
+    public function setJexamxmlPath($path)
+    {
     }
 }
 
@@ -80,31 +84,44 @@ class CommandLineArgsParseService
         // TODO: Kombinování parametrů
         // TODO: Duplicitní parametry.
 
-        foreach ($argv as $arg) {
-            $this->trySetValue($arg, 'help', $args->help);
-            $this->trySetValue($arg, 'recursive', $args->recursive);
-            $this->trySetValue($arg, 'parse-only', $args->parseOnly);
-            $this->trySetValue($arg, 'int-only', $args->intOnly);
-            $this->trySetPath($arg, 'directory', $args->directory);
-            $this->trySetPath($arg, 'parse-script', $args->parseScript);
-            $this->trySetPath($arg, 'int-script', $args->intScript);
-            $this->trySetPath($arg, 'jexamxml', $args->jexamxml);
+        foreach (array_slice($argv, 1) as $arg) {
+            switch (substr($arg, 2)) {
+                case 'help':
+                    $args->setHelp();
+                    break;
+                case 'recursive':
+                    $args->setRecursive();
+                    break;
+                case 'parse-only':
+                    $args->setParseOnly();
+                    break;
+                case 'int-only':
+                    $args->setIntOnly();
+                    break;
+                default:
+                    if (Helper::startsWith($arg, 'directory')) {
+                        $args->setDirectory($this->getPathFromArgument($arg, 'directory'));
+                        break;
+                    } elseif (Helper::startsWith($arg, 'parse-script')) {
+                        $args->setParseScript($this->getPathFromArgument($arg, 'parse-script'));
+                        break;
+                    } elseif (Helper::startsWith($arg, 'int-script')) {
+                        $args->setIntScript($this->getPathFromArgument($arg, 'int-script'));
+                        break;
+                    } elseif (Helper::startsWith($arg, 'jexamxml')) {
+                        $args->setJexamxmlPath($this->getPathFromArgument($arg, 'jexamxml'));
+                        break;
+                    } else {
+                        exit(1); // TODO: Error code and message.
+                    }
+            }
         }
 
         return $args;
     }
 
-    private function trySetValue($currentVal, $key, &$output)
+    private function getPathFromArgument($str, $key)
     {
-        if ($currentVal == "--$key") {
-            $output = true;
-        }
-    }
-
-    private function trySetPath($currentVal, $key, &$path)
-    {
-        if (preg_match("/--$key=(.+)/", $currentVal, $matches)) {
-            $path = $matches[1];
-        }
+        return preg_match("/--$key=(.+)/", $str, $matches) ? $matches[1] : null;
     }
 }

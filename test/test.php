@@ -1,5 +1,6 @@
 <?php
-include './arg_parser.php';
+if (!isset($ARG_PARSE)) include './arg_parser.php';
+if (!isset($HELPER)) include './helper.php';
 
 class Program
 {
@@ -15,7 +16,7 @@ class Program
         $args = $this->commandLineParser->parse($argc, $argv);
 
         var_dump($args);
-        echo "RunAll: ".$args->runAll();
+        echo "RunAll: " . $args->runAll();
     }
 }
 
