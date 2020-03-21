@@ -19,6 +19,38 @@ class CommandLineArguments
     {
         return !$this->parseOnly && !$this->intOnly && !$this->help;
     }
+
+    public function setHelp() {
+
+    }
+
+    public function setDirectory($dir) {
+
+    }
+
+    public function setRecursive() {
+
+    }
+
+    public function setParseScript($filename) {
+
+    }
+
+    public function setIntScript($filename) {
+
+    }
+
+    public function setParseOnly() {
+
+    }
+
+    public function setIntOnly() {
+
+    }
+
+    public function setJexamxmlPath($path) {
+
+    }
 }
 
 class CommandLineArgsParseService
