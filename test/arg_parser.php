@@ -24,36 +24,45 @@ class CommandLineArguments
         return !$this->parseOnly && !$this->intOnly && !$this->help;
     }
 
+    // TODO Implement
     public function setHelp()
     {
     }
 
+    // TODO Implement
     public function setDirectory($dir)
     {
     }
 
+    // TODO Implement
     public function setRecursive()
     {
     }
 
+    // TODO Implement
     public function setParseScript($filename)
     {
     }
 
+    // TODO Implement
     public function setIntScript($filename)
     {
     }
 
+    // TODO Implement
     public function setParseOnly()
     {
     }
 
+    // TODO Implement
     public function setIntOnly()
     {
     }
 
+    // TODO Implement
     public function setJexamxmlPath($path)
     {
+        $this->jexamxml = $path;
     }
 }
 
@@ -85,17 +94,17 @@ class CommandLineArgsParseService
         // TODO: Duplicitní parametry.
 
         foreach (array_slice($argv, 1) as $arg) {
-            switch (substr($arg, 2)) {
-                case 'help':
+            switch ($arg) {
+                case '--help':
                     $args->setHelp();
                     break;
-                case 'recursive':
+                case '--recursive':
                     $args->setRecursive();
                     break;
-                case 'parse-only':
+                case '--parse-only':
                     $args->setParseOnly();
                     break;
-                case 'int-only':
+                case '--int-only':
                     $args->setIntOnly();
                     break;
                 default:
@@ -108,10 +117,11 @@ class CommandLineArgsParseService
                     } elseif (Helper::startsWith($arg, 'int-script')) {
                         $args->setIntScript($this->getPathFromArgument($arg, 'int-script'));
                         break;
-                    } elseif (Helper::startsWith($arg, 'jexamxml')) {
+                    } elseif (Helper::startsWith($arg, '--jexamxml')) {
                         $args->setJexamxmlPath($this->getPathFromArgument($arg, 'jexamxml'));
                         break;
                     } else {
+                        echo $arg;
                         exit(1); // TODO: Error code and message.
                     }
             }
