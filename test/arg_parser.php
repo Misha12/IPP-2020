@@ -1,9 +1,12 @@
 <?php
-if (!isset($HELPER)) include './helper.php';
-if (!isset($APP_CODES)) include './app_codes.php';
+if (!isset($HELPER)) include 'helper.php';
+if (!isset($APP_CODES)) include 'app_codes.php';
 
 $ARG_PARSE = 1;
 
+/**
+ * Trida pro uchovavani nactenych parametru prikazove radky.
+ */
 class CommandLineArguments
 {
     public $help = false;
@@ -25,9 +28,6 @@ class CommandLineArguments
         return !$this->parseOnly && !$this->intOnly && !$this->help;
     }
 
-    // TODO Pokud je help == true, tak zakazat dalsi kombinace. Pokud bude, tak chyba 10.
-    // TODO Pokud už byl jednou parametr nastaven, tak další volání ignorovat.
-
     public function setHelp()
     {
         $this->help = true;
@@ -46,30 +46,22 @@ class CommandLineArguments
 
     public function setParseScript($filepath)
     {
-        // TODO Muze se zde objevit i cesta?
-        // TODO Mame zohlednit parametr --directory?
         $this->checkExists($filepath);
         $this->parseScript = $filepath;
     }
 
     public function setIntScript($filepath)
     {
-        // TODO Muze se zde objevit i cesta?
-        // TODO Mame zohlednit parametr --directory?
         $this->checkExists($filepath);
-        $this->intScript = $filepath;
     }
 
     public function setParseOnly()
     {
-        // TODO Nepovolit kombinaci s --int-only, --int-script
         $this->parseOnly = true;
     }
 
     public function setIntOnly()
     {
-        // TODO Nepovolit kombinaci s --parse-only, --parse-script
-
         $this->intOnly = true;
     }
 
@@ -88,10 +80,21 @@ class CommandLineArguments
     }
 }
 
+/**
+ * Sluzba pro nacitani parametru prikazove radky.
+ */
 class CommandLineArgsParseService
 {
+    /**
+     * Hlavni funkce pro nacitani parametru prikazove radky.
+     *
+     * @param int $argc Pocet parametru zadanych na prikazove radce (obsahuje i cestu a nazev skriptu v polozce na prvnim indexu).
+     * @param int $argv Parametry zadane na prikazove radce.
+     * @return CommandLineArguments
+     */
     public function parse($argc, $argv)
     {
+        print_r($argv);
         if ($argc == 1)
             return new CommandLineArguments();
 
@@ -111,6 +114,25 @@ class CommandLineArgsParseService
     private function parseArguments($argv)
     {
         $args = new CommandLineArguments();
+
+        if (in_array('--help', $argv) && count($argv) > 2) {
+            $joined = implode(' ', array_slice($argv, 1));
+            throw new ErrorException("Unallowed combination of parameter. ($joined)", AppCodes::UnallowedParameterCombination);
+        }
+
+        if (in_array("--parse-only", $argv)) {
+            foreach ($argv as $arg) {
+                if ($arg == '--int-only' || Helper::startsWith($arg, '--int-script')) {
+                    throw new ErrorException("--int-only or --int-script are disabled in combination with --parse-only.", AppCodes::UnallowedParameterCombination);
+                }
+            }
+        } elseif (in_array('--int-only', $argv)) {
+            foreach ($argv as $arg) {
+                if ($arg == '--parse-only' || Helper::startsWith($arg, '--parse-script')) {
+                    throw new ErrorException("--parse-only or --parse-script are disabled in combination with --int-only.", AppCodes::UnallowedParameterCombination);
+                }
+            }
+        }
 
         foreach (array_slice($argv, 1) as $arg) {
             switch ($arg) {

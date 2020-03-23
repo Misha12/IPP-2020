@@ -1,6 +1,6 @@
 <?php
-if (!isset($ARG_PARSE)) include './arg_parser.php';
-if (!isset($HELPER)) include './helper.php';
+if (!isset($ARG_PARSE)) include 'arg_parser.php';
+if (!isset($HELPER)) include 'helper.php';
 
 class Program
 {
