@@ -24,6 +24,8 @@ if ($args->help) {
     exit(AppCodes::Success);
 }
 
+
+
 // TODO(DONE): Načítání parametrů příkazové řádky.
 // TODO(DONE): Nápověda.
 // TODO: Načtení seznamů testů.
