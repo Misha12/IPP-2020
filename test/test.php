@@ -16,7 +16,6 @@ class Program
         $args = $this->commandLineParser->parse($argc, $argv);
 
         var_dump($args);
-        echo "RunAll: " . $args->runAll();
     }
 }
 

@@ -10,7 +10,7 @@ $ARG_PARSE = 1;
 class CommandLineArguments
 {
     public $help = false;
-    public $directory = '';
+    public $directory = '.';
     public $recursive = false;
     public $parseScript = 'parse.php';
     public $intScript = 'interpret.py';
@@ -18,30 +18,10 @@ class CommandLineArguments
     public $intOnly = false;
     public $jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
 
-    public function __construct()
-    {
-        $this->directory = getcwd();
-    }
-
-    public function runAll()
-    {
-        return !$this->parseOnly && !$this->intOnly && !$this->help;
-    }
-
-    public function setHelp()
-    {
-        $this->help = true;
-    }
-
     public function setDirectory($dir)
     {
         $this->checkExists($dir, true);
         $this->directory = $dir;
-    }
-
-    public function setRecursive()
-    {
-        $this->recursive = true;
     }
 
     public function setParseScript($filepath)
@@ -52,21 +32,14 @@ class CommandLineArguments
 
     public function setIntScript($filepath)
     {
+        $filepath = realpath($filepath);
         $this->checkExists($filepath);
-    }
-
-    public function setParseOnly()
-    {
-        $this->parseOnly = true;
-    }
-
-    public function setIntOnly()
-    {
-        $this->intOnly = true;
+        $this->intScript = $filepath;
     }
 
     public function setJexamxmlPath($path)
     {
+        $path = realpath($path);
         $this->checkExists($path);
         $this->jexamxml = $path;
     }
@@ -75,7 +48,7 @@ class CommandLineArguments
     {
         if (!file_exists($path)) {
             $type = $isDirectory ? 'Directory' : 'File';
-            throw new ErrorException("$type '$path' not exists", AppCodes::CannotOpenFileOrDirectory);
+            throw new ErrorException("$type '$path' not exists", AppCodes::CannotOpenInputFileOrDirectory);
         }
     }
 }
@@ -94,7 +67,6 @@ class CommandLineArgsParseService
      */
     public function parse($argc, $argv)
     {
-        print_r($argv);
         if ($argc == 1)
             return new CommandLineArguments();
 
@@ -114,64 +86,33 @@ class CommandLineArgsParseService
     private function parseArguments($argv)
     {
         $args = new CommandLineArguments();
+        $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
 
-        if (in_array('--help', $argv) && count($argv) > 2) {
-            $joined = implode(' ', array_slice($argv, 1));
-            throw new ErrorException("Unallowed combination of parameter. ($joined)", AppCodes::UnallowedParameterCombination);
+        if (key_exists("help", $optArgs)) {
+            if (count($args) > 1)
+                throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
+
+            $args->help = true;
         }
 
-        if (in_array("--parse-only", $argv)) {
-            foreach ($argv as $arg) {
-                if ($arg == '--int-only' || Helper::startsWith($arg, '--int-script')) {
-                    throw new ErrorException("--int-only or --int-script are disabled in combination with --parse-only.", AppCodes::UnallowedParameterCombination);
-                }
-            }
-        } elseif (in_array('--int-only', $argv)) {
-            foreach ($argv as $arg) {
-                if ($arg == '--parse-only' || Helper::startsWith($arg, '--parse-script')) {
-                    throw new ErrorException("--parse-only or --parse-script are disabled in combination with --int-only.", AppCodes::UnallowedParameterCombination);
-                }
-            }
-        }
+        $args->recursive = key_exists("recursive", $optArgs);
+        $args->intOnly = key_exists("int-only", $optArgs);
+        $args->parseOnly = key_exists("parse-only", $optArgs);
 
-        foreach (array_slice($argv, 1) as $arg) {
-            switch ($arg) {
-                case '--help':
-                    $args->setHelp();
-                    break;
-                case '--recursive':
-                    $args->setRecursive();
-                    break;
-                case '--parse-only':
-                    $args->setParseOnly();
-                    break;
-                case '--int-only':
-                    $args->setIntOnly();
-                    break;
-                default:
-                    if (Helper::startsWith($arg, '--directory')) {
-                        $args->setDirectory($this->getPathFromArgument($arg, 'directory'));
-                        break;
-                    } elseif (Helper::startsWith($arg, '--parse-script')) {
-                        $args->setParseScript($this->getPathFromArgument($arg, 'parse-script'));
-                        break;
-                    } elseif (Helper::startsWith($arg, '--int-script')) {
-                        $args->setIntScript($this->getPathFromArgument($arg, 'int-script'));
-                        break;
-                    } elseif (Helper::startsWith($arg, '--jexamxml')) {
-                        $args->setJexamxmlPath($this->getPathFromArgument($arg, 'jexamxml'));
-                        break;
-                    } else {
-                        break;
-                    }
-            }
-        }
+        if (key_exists("directory", $optArgs)) $args->setDirectory($args["directory"]);
+        if (key_exists("parse-script", $optArgs)) $args->setParseScript($args["parse-script"]);
+        if (key_exists("int-script", $optArgs)) $args->setIntScript($optArgs["int-script"]);
+        if (key_exists("jexamxml", $optArgs)) $args->setJexamxmlPath($optArgs["jexamxml"]);
+
+        if ($args->parseOnly && $args->intOnly)
+            throw new ErrorException("--int-only and --parse-only cannot be combined.", AppCodes::InvalidParameters);
+
+        if ($args->parseOnly && key_exists("int-script", $optArgs))
+            throw new ErrorException("--int-script cannot be combined with --parse-only", AppCodes::InvalidParameters);
+
+        if ($args->intOnly && key_exists("parse-script", $optArgs))
+            throw new ErrorException("--parse-script cannot be combined with --int-only", AppCodes::InvalidParameters);
 
         return $args;
-    }
-
-    private function getPathFromArgument($str, $key)
-    {
-        return preg_match("/--$key=(.+)/", $str, $matches) ? $matches[1] : null;
     }
 }
