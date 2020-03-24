@@ -70,7 +70,7 @@ class CommandLineArgsParseService
             $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
 
             if (key_exists("help", $optArgs)) {
-                if (count($args) > 1)
+                if (count($optArgs) > 1)
                     throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
 
                 $args->help = true;
@@ -96,7 +96,7 @@ class CommandLineArgsParseService
 
             return $args;
         } catch (ErrorException $e) {
-            Helper::errorExit($e->getCode(), $e->getMessage());
+            errorExit($e->getCode(), $e->getMessage());
         }
     }
 }
