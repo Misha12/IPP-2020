@@ -13,7 +13,7 @@ class Program
 
     public function Run($argc, $argv)
     {
-        $args = $this->commandLineParser->parse($argc, $argv);
+        $args = $this->commandLineParser->getAndParse();
 
         var_dump($args);
     }

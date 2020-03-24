@@ -61,58 +61,42 @@ class CommandLineArgsParseService
     /**
      * Hlavni funkce pro nacitani parametru prikazove radky.
      *
-     * @param int $argc Pocet parametru zadanych na prikazove radce (obsahuje i cestu a nazev skriptu v polozce na prvnim indexu).
-     * @param int $argv Parametry zadane na prikazove radce.
      * @return CommandLineArguments
      */
-    public function parse($argc, $argv)
+    public function getAndParse()
     {
-        if ($argc == 1)
-            return new CommandLineArguments();
-
         try {
-            return $this->parseArguments($argv);
+            $args = new CommandLineArguments();
+            $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
+
+            if (key_exists("help", $optArgs)) {
+                if (count($args) > 1)
+                    throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
+
+                $args->help = true;
+            }
+
+            $args->recursive = key_exists("recursive", $optArgs);
+            $args->intOnly = key_exists("int-only", $optArgs);
+            $args->parseOnly = key_exists("parse-only", $optArgs);
+
+            if (key_exists("directory", $optArgs)) $args->setDirectory($args["directory"]);
+            if (key_exists("parse-script", $optArgs)) $args->setParseScript($args["parse-script"]);
+            if (key_exists("int-script", $optArgs)) $args->setIntScript($optArgs["int-script"]);
+            if (key_exists("jexamxml", $optArgs)) $args->setJexamxmlPath($optArgs["jexamxml"]);
+
+            if ($args->parseOnly && $args->intOnly)
+                throw new ErrorException("--int-only and --parse-only cannot be combined.", AppCodes::InvalidParameters);
+
+            if ($args->parseOnly && key_exists("int-script", $optArgs))
+                throw new ErrorException("--int-script cannot be combined with --parse-only", AppCodes::InvalidParameters);
+
+            if ($args->intOnly && key_exists("parse-script", $optArgs))
+                throw new ErrorException("--parse-script cannot be combined with --int-only", AppCodes::InvalidParameters);
+
+            return $args;
         } catch (ErrorException $e) {
             Helper::errorExit($e->getCode(), $e->getMessage());
         }
-    }
-
-    /**
-     * Nacitani parametru prikazove radky.
-     *
-     * @param mixed $argv
-     * @return CommandLineArguments
-     */
-    private function parseArguments($argv)
-    {
-        $args = new CommandLineArguments();
-        $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
-
-        if (key_exists("help", $optArgs)) {
-            if (count($args) > 1)
-                throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
-
-            $args->help = true;
-        }
-
-        $args->recursive = key_exists("recursive", $optArgs);
-        $args->intOnly = key_exists("int-only", $optArgs);
-        $args->parseOnly = key_exists("parse-only", $optArgs);
-
-        if (key_exists("directory", $optArgs)) $args->setDirectory($args["directory"]);
-        if (key_exists("parse-script", $optArgs)) $args->setParseScript($args["parse-script"]);
-        if (key_exists("int-script", $optArgs)) $args->setIntScript($optArgs["int-script"]);
-        if (key_exists("jexamxml", $optArgs)) $args->setJexamxmlPath($optArgs["jexamxml"]);
-
-        if ($args->parseOnly && $args->intOnly)
-            throw new ErrorException("--int-only and --parse-only cannot be combined.", AppCodes::InvalidParameters);
-
-        if ($args->parseOnly && key_exists("int-script", $optArgs))
-            throw new ErrorException("--int-script cannot be combined with --parse-only", AppCodes::InvalidParameters);
-
-        if ($args->intOnly && key_exists("parse-script", $optArgs))
-            throw new ErrorException("--parse-script cannot be combined with --int-only", AppCodes::InvalidParameters);
-
-        return $args;
     }
 }
