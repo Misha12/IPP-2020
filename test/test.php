@@ -44,6 +44,7 @@ var_dump($testResults);
 // TODO(DONE): Nápověda.
 // TODO(DONE): Načtení testů a jejich registrace do kontejneru.
 // TODO(DONE): Inicializace testů (Kontroly, vytvoření chybějících souborů, atd... Případně zařvat FUCK YOU).
-// TODO: Provedení testů.
+// TODO(DONE): Provedení testů (Parser).
+// TODO: Provedení testů (Interpret).
 // TODO: Zpracování výsledků.
 // TODO: Generování HTML.
