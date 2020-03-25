@@ -1,4 +1,4 @@
-.IPPcode19
+.IPPcode20
 MOVE LF@par int@2
 CREATEFRAME
 PUSHFRAME

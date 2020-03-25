@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<program language="IPPcode19">
+<program language="IPPcode20">
 	<instruction order="1" opcode="CREATEFRAME"/>
 	<instruction order="2" opcode="RETURN"/>
 	<instruction order="3" opcode="BREAK"/>

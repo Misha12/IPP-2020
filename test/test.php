@@ -1,13 +1,15 @@
 <?php
-if (!isset($APP_CODES)) include 'app_codes.php';
-if (!isset($ARG_PARSE)) include 'arg_parser.php';
+if (!isset($APP_CONSTS)) include 'Consts.class.php';
+if (!isset($ARG_PARSE)) include 'ArgumentParser.class.php';
 if (!isset($HELPER)) include 'helper.php';
+if (!isset($TEST_LOADER)) include 'TestLoaderService.class.php';
 
 $commandLineParser = new CommandLineArgsParseService();
+$testLoader = new TestsLoaderService();
 
-$args = $commandLineParser->getAndParse();
+$config = $commandLineParser->getAndParse();
 
-if ($args->help) {
+if ($config->help) {
     output("Testovací skript pro spuštění testů nad analyzátorem a interpreterem kódu IPPCode20." . PHP_EOL);
     output("Test je možno ovlivnit následujícími parametry (Všechny parametry jsou volitelné a mají nastavenou výchozí hodnotu.):");
 
@@ -24,13 +26,24 @@ if ($args->help) {
     exit(AppCodes::Success);
 }
 
+$tests = $testLoader->findTests($config);
 
+$testResults = [];
+foreach ($tests as $test) {
+    try {
+        $test->initTest($config);
+        $testResults[] = $test->runTest($config); // TODO: Implement this shit.
+    } catch (Exception $e) {
+        output($e->getMessage());
+    }
+}
+
+var_dump($testResults);
 
 // TODO(DONE): Načítání parametrů příkazové řádky.
 // TODO(DONE): Nápověda.
-// TODO: Načtení seznamů testů.
-// TODO: Registrace testů do kontejneru.
-// TODO: Inicializace testů (Kontroly, vytvoření chybějících souborů, atd... Případně zařvat FUCK YOU).
+// TODO(DONE): Načtení testů a jejich registrace do kontejneru.
+// TODO(DONE): Inicializace testů (Kontroly, vytvoření chybějících souborů, atd... Případně zařvat FUCK YOU).
 // TODO: Provedení testů.
 // TODO: Zpracování výsledků.
 // TODO: Generování HTML.

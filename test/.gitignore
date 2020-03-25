@@ -1,1 +1,3 @@
 *.hobit
+*.out_tmp
+*.err_tmp
