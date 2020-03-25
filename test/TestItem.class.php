@@ -81,7 +81,7 @@ class TestItem
             $result->parseResult = $this->runParserTest($config);
 
         if (!$config->parseOnly)
-            $result->intResult = $this->runInterpretTest($config);
+            $result->intResult = $this->runInterpretTest($config, $result->parseResult);
 
         // TODO: IPPCode20 -> XML -> Interpret.
         // TODO: Úklid dočasných souborů po testech.
@@ -90,7 +90,7 @@ class TestItem
         return $result;
     }
 
-    private function runInterpretTest($config)
+    private function runInterpretTest($config, $parseTestResult)
     {
         output("Starting interpret test " . $this->name, true);
         return true;
