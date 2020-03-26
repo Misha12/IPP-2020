@@ -7,6 +7,31 @@ class TestResult
 {
     public $parseResult = null;
     public $intResult = null;
+
+    public function isOk()
+    {
+        $parseSuccess = $this->parseResult != null && $this->parseResult->isOk();
+        $intSuccess = $this->intResult != null && $this->intResult->isOk();
+
+        if ($this->intResult == null)
+            return $parseSuccess;
+
+        return $parseSuccess && $intSuccess;
+    }
+
+    public function getMessage()
+    {
+        if ($this->parseResult != null && !$this->parseResult->isOk()) {
+            if ($this->parseResult->expectedExitCode != $this->parseResult->realExitCode)
+                return 'Neočekávaný návratový kód: ' . $this->parseResult->realExitCode . '. Očekáváno: ' . $this->parseResult->expectedExitCode;
+            elseif ($this->parseResult->xmlState === 'different_xml') {
+                return 'Rozdílná XML struktura.';
+            }
+        }
+
+        // TODO: Interpret.
+        return null;
+    }
 }
 
 class TestPartResult
@@ -30,7 +55,13 @@ class TestPartResult
 
     public function isOk()
     {
-        return $this->expectedExitCode === $this->realExitCode;
+        if ($this->expectedExitCode !== $this->realExitCode)
+            return false;
+
+        if ($this->xmlState != 'not_tested' && $this->xmlState != 'ok')
+            return false;
+
+        return true;
     }
 }
 
@@ -55,7 +86,7 @@ class TestItem
 
     private function getFullPath()
     {
-        return $this->path . DIRECTORY_SEPARATOR . $this->name;
+        return realpath($this->path) . DIRECTORY_SEPARATOR . $this->name;
     }
 
     public function initTest($config)
@@ -83,17 +114,16 @@ class TestItem
         if (!$config->parseOnly)
             $result->intResult = $this->runInterpretTest($config, $result->parseResult);
 
-        // TODO: IPPCode20 -> XML -> Interpret.
-        // TODO: Úklid dočasných souborů po testech.
-
-        $result->parseResult->clean();
+        if ($result->parseResult != null) $result->parseResult->clean();
+        if ($result->intResult != null) $result->intResult->clean();
         return $result;
     }
 
     private function runInterpretTest($config, $parseTestResult)
     {
+        // TODO: Implement this shit
         output("Starting interpret test " . $this->name, true);
-        return true;
+        return new TestPartResult();
     }
 
     /**
