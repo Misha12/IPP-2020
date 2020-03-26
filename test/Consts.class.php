@@ -17,5 +17,9 @@ class AppCodes
 }
 
 const PHP_EXECUTABLE = "php7.4";
-const PYTHON_EXECUTABLE = "python3";
+const PYTHON_EXECUTABLE = "python3.8";
 const JAVA_EXECUTABLE = "java -jar";
+const DEFAULT_PATH = '.';
+const DEFAULT_PARSE = 'parse.php';
+const DEFAULT_INT = 'interpret.py';
+const DEFAULT_JEXAMXML = '/pub/courses/ipp/jexamxml/jexamxml.jar';

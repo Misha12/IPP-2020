@@ -10,13 +10,13 @@ $ARG_PARSE = 1;
 class CommandLineArguments
 {
     public $help = false;
-    public $directory = '.';
+    public $directory = DEFAULT_PATH;
     public $recursive = false;
-    public $parseScript = 'parse.php';
-    public $intScript = 'interpret.py';
+    public $parseScript = DEFAULT_PARSE;
+    public $intScript = DEFAULT_INT;
     public $parseOnly = false;
     public $intOnly = false;
-    public $jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+    public $jexamxml = DEFAULT_JEXAMXML;
 
     public function setDirectory($dir)
     {
@@ -26,6 +26,7 @@ class CommandLineArguments
 
     public function setParseScript($filepath)
     {
+        $filepath = realpath($filepath);
         $this->checkExists($filepath);
         $this->parseScript = $filepath;
     }
