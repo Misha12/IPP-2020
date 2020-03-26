@@ -1,3 +1,5 @@
 *.hobit
 *.out_tmp
 *.err_tmp
+*.html
+!template.html
