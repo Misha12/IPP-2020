@@ -50,5 +50,6 @@ HTMLGenerator::render($testResults, $config);
 // TODO: Provedení testů (Interpret).
 // TODO(DONE): Zpracování výsledků.
 // TODO(DONE): Generování HTML.
+// TODO: Optimalizace. Vyhození nepotřebných položek.
 
 exit(AppCodes::Success);
