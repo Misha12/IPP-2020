@@ -16,9 +16,10 @@ class AppCodes
     public const CannotOpenInputFileOrDirectory = 11;
 }
 
-const PHP_EXECUTABLE = "php7.4";
+const PHP_EXECUTABLE = "php"; // TODO: PHP7.4
 const PYTHON_EXECUTABLE = "python3.8";
 const JAVA_EXECUTABLE = "java -jar";
+const DIFF_EXECUTABLE = "diff";
 const DEFAULT_PATH = '.';
 const DEFAULT_PARSE = 'parse.php';
 const DEFAULT_INT = 'interpret.py';

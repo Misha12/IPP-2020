@@ -41,15 +41,4 @@ foreach ($tests as $key => $test) {
 }
 
 HTMLGenerator::render($testResults, $config);
-
-// TODO(DONE): Načítání parametrů příkazové řádky.
-// TODO(DONE): Nápověda.
-// TODO(DONE): Načtení testů a jejich registrace do kontejneru.
-// TODO(DONE): Inicializace testů (Kontroly, vytvoření chybějících souborů, atd... Případně zařvat FUCK YOU).
-// TODO(DONE): Provedení testů (Parser).
-// TODO: Provedení testů (Interpret).
-// TODO(DONE): Zpracování výsledků.
-// TODO(DONE): Generování HTML.
-// TODO: Optimalizace. Vyhození nepotřebných položek.
-
 exit(AppCodes::Success);

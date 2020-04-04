@@ -3,3 +3,4 @@
 *.err_tmp
 *.html
 !template.html
+__pycache__

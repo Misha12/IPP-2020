@@ -16,7 +16,14 @@ class CommandLineArguments
     public $intScript = DEFAULT_INT;
     public $parseOnly = false;
     public $intOnly = false;
+
     public $jexamxml = DEFAULT_JEXAMXML;
+    public $jexamxmlConfig = null;
+
+    public function __construct()
+    {
+        $this->jexamxmlConfig = dirname(DEFAULT_JEXAMXML) . "/options";
+    }
 
     public function setDirectory($dir)
     {
@@ -43,6 +50,7 @@ class CommandLineArguments
         $path = realpath($path);
         $this->checkExists($path);
         $this->jexamxml = $path;
+        $this->jexamxmlConfig = dirname($path) . "/options";
     }
 
     private function checkExists($path, $isDirectory = false)
