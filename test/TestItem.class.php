@@ -3,6 +3,9 @@ if (!isset($APP_CONSTS)) include 'Consts.class.php';
 
 $TEST_ITEM = 1;
 
+/**
+ * Trida reprezentujici vysledek jednoho testu.
+ */
 class TestResult
 {
     /**
@@ -17,6 +20,10 @@ class TestResult
      */
     public $intResult = null;
 
+    /**
+     * Funkce pro vyhodnoceni, zda test byl uspesny.
+     * @return boolean
+     */
     public function isOk()
     {
         if ($this->parseResult != null) {
@@ -38,6 +45,11 @@ class TestResult
         return true;
     }
 
+    /**
+     * Funkce pro ziskani textu v pripade neuspechu testu. Pokud byl test uspesny, tak vraci null.
+     *
+     * @return string
+     */
     public function getMessage()
     {
         if ($this->parseResult != null)
@@ -50,18 +62,67 @@ class TestResult
     }
 }
 
+/**
+ * Trida reprezentujici vysledek jedne casty jednoho testu.
+ */
 class TestPartResult
 {
+    /**
+     * Ocekavany navratovy kod.
+     * @var integer
+     */
     public $expectedExitCode = 0;
+
+    /**
+     * Skutecny navratovy kod.
+     * @var integer
+     */
     public $realExitCode = 0;
+
+    /**
+     * Cesta k souboru, ve kterem se budou nachazet data vracena na standardni vystup.
+     * @var string
+     */
     public $stdoutFile = null;
+
+    /**
+     * Cesta k souboru, ve kterem se budou nachazet data vracenaw na standardni chybovy vystup.
+     * @var string
+     */
     public $stderrFile = null;
+
+    /**
+     * Stav popisujici vysledek porovanvacim nastrojem. 
+     * Muze nabyvat hodnota 'ok', 'not_tested' a 'different'. 
+     * @var string
+     */
     public $diffState = 'not_tested';
 
+    /**
+     * Obsah standardniho vystupu. Pokud soubor neexistuje, tak bude nabyvat hodnoty null.
+     * Data se do teto vlastnoti ulozi po zavolani metody clean().
+     * @var string
+     */
     private $stdout = null;
+
+    /**
+     * Obsah standardniho chyboveho vystupu. Pokud soubor neexistuje, tak bude nabyvat hodnoty null.
+     * Data se do teto vlastnosti ulozi po zavolani metody clean().
+     * @var string
+     */
     private $stderr = null;
+
+    /**
+     * Rozdily vraceny porovnavacim nastrojem.
+     * @var string
+     */
     public $diffResult = null;
 
+    /**
+     * Funkce pro nacteni obsahu docasnych souboru a jejich uklid.
+     *
+     * @return void
+     */
     public function clean()
     {
         $isOk = $this->isOk();
@@ -81,6 +142,11 @@ class TestPartResult
         }
     }
 
+    /**
+     * Vyhodnoceni, zda tato cast testu byla uspesna.
+     *
+     * @return boolean
+     */
     public function isOk()
     {
         if ($this->expectedExitCode !== $this->realExitCode)
@@ -92,6 +158,10 @@ class TestPartResult
         return true;
     }
 
+    /**
+     * Ziskani zpravy o neuspesnosti casti testu. Pokud byl test uspesny.
+     * @return string
+     */
     public function getMessage()
     {
         if ($this->expectedExitCode !== $this->realExitCode) {
@@ -112,12 +182,40 @@ class TestPartResult
  */
 class TestItem
 {
+    /**
+     * Cesta k adresari se soubory testu.
+     * @var string
+     */
     public $path;
+
+    /**
+     * Nazev testu.
+     * @var string
+     */
     public $name;
 
+    /**
+     * Priznak existence zdrojoveho kodu.
+     * @var boolean
+     */
     public $srcExists = false;
+
+    /**
+     * Priznak, ze existuje vstupni soubor.
+     * @var boolean
+     */
     public $inputExists = false;
+
+    /**
+     * Priznak, ze existuje soubor, ve kterem bude vystup testovaneho progamu.
+     * @var boolean
+     */
     public $outputExists = false;
+
+    /**
+     * Priznak, ze existuje soubor, ve kterem bude navratovy kod.
+     * @var boolean
+     */
     public $returnCodeExists = false;
 
     public function __construct($name, $path)
@@ -131,7 +229,12 @@ class TestItem
         return realpath($this->path) . DIRECTORY_SEPARATOR . $this->name;
     }
 
-    public function initTest($config)
+    /**
+     * Inicializace testu. Pokud nebude existovat zdrojovy kod testu, tak se vrati vyjimka.
+     * Pokud neexistuje vstupni, nebo vystupni soubor, tak se automaticky vytvori prazdny.
+     * Pokud nebude existovat soubor s ocekavanym navratovym kodem, tak se automaticky vytvori soubor naplneny hodnotou 0.
+     */
+    public function initTest()
     {
         if (!$this->srcExists)
             throw new Exception("Source file '" . $this->name . "' not found.");
@@ -141,6 +244,12 @@ class TestItem
         if (!$this->returnCodeExists) file_put_contents($this->getFullPath() . ".rc", "0");
     }
 
+    /**
+     * Spusteni testu.
+     *
+     * @param Arguments $config
+     * @return TestResult
+     */
     public function runTest($config)
     {
         $result = new TestResult();
@@ -160,7 +269,7 @@ class TestItem
     /**
      * Spusteni testu interpretace.
      *
-     * @param CommandLineArguments $config
+     * @param Arguments $config
      * @param TestPartResult $parseTestResult
      * @return TestPartResult
      */
@@ -201,7 +310,7 @@ class TestItem
     /**
      * Spusteni testu analyzatoru kodu.
      *
-     * @param CommandLineArguments $config
+     * @param Arguments $config
      * @return TestPartResult
      */
     private function runParserTest($config)

@@ -3,10 +3,19 @@ if (!isset($APP_CONSTS)) include 'Consts.class.php';
 
 $HTML_GENERATOR = 1;
 
+/**
+ * Generator vysledneho HTML reportu.
+ */
 class HTMLGenerator
 {
     private static $title = "IPP 2020 Výsledky testů";
 
+    /**
+     * Provedeni vygenerovani reportu.
+     *
+     * @param TestResult[] $testResults Vysledky jednotlivych testu.
+     * @param Arguments $config Konfigurace z prikazove radky.
+     */
     public static function render($testResults, $config)
     {
         echo "<!DOCTYPE html><html>";
@@ -17,6 +26,9 @@ class HTMLGenerator
         echo "</html>\n";
     }
 
+    /**
+     * Vygenerovani HTML hlavicky a stylu.
+     */
     private static function renderHead()
     {
         echo "<head><title>" . self::$title . "</title><meta charset='utf-8' />";
@@ -28,13 +40,16 @@ class HTMLGenerator
 
     private static function renderStyles()
     {
+        // Stranka
         echo "<style>* { margin: 0; padding: 0 }
 body { box-sizing: border-box; font-family: \"Segoe UI\", Arial, \"Noto Sans\", sans-serif; background: whitesmoke; }";
 
+        // Hlavicka
         echo "header { background: #343a40; display: grid; grid-template-columns: max-content auto; color: #f8f9fa }
 header h1 { padding: 10px; padding-right: 15px; margin-right: 15px; font-weight: 100; border-right: 1px solid; }
 header .created-at { display: flex; align-items: center; }";
 
+        // Souhrny - konfigurace.
         echo ".summary-container { display: flex; justify-content: center; width: 100%; padding-top: 25px }
 .summary-item { min-width: 550px; height: 300px; box-shadow: 10px 10px 50px -20px rgba(0,0,0,0.4); border-radius: 15px; }
 .summary-item:not(:last-child) { margin-right: 20px; }
@@ -43,6 +58,7 @@ header .created-at { display: flex; align-items: center; }";
 .summary-item-content ul { padding: 20px; padding-left: 40px; }
 .summary-item-content li { padding-top: 5px; }";
 
+        // Souhrny - testy.
         echo ".test-summary-grid { display: grid; grid-template-columns: 40% auto; padding: 20px; padding-left: 40px; height: 80%; }
 .test-summary-grid h1 { font-size: 80px; font-weight: 300; height: 100%; display: flex; align-items: center; }
 .test-summary-grid h1.bad, .test-result-status.failed { color: red; }
@@ -52,10 +68,12 @@ header .created-at { display: flex; align-items: center; }";
 .test-summary-grid div table { width: 100%; }
 .test-summary-grid div table tr td { font-size: 20px; }";
 
+        // Tabulky.
         echo ".table-results { margin-left: auto; margin-right: auto; width: 70%; }
 .table-results h1 { margin-top: 50px; margin-bottom: 20px; font-weight: 300; text-align: center; color: rgba(0, 0, 0, 0.7); font-size: 35px; }
 .table-results-container { box-shadow: 10px 10px 50px -20px rgba(0, 0, 0, 0.4); border-radius: 15px; }";
 
+        // Jednotlive testy.
         echo ".test-result { display: flex; border-bottom: 1px solid rgba(81, 85, 90, 0.1); padding: 10px; align-items: center; }
 .test-result:last-child { border-bottom: none; margin-bottom: 20px; }
 .test-result-order { border: 1px solid; border-radius: 50%; min-width: 32px; min-height: 32px; font-weight: bold; display: flex; justify-content: center; align-items: center; flex-shrink: 0; margin-right: 16px; }
@@ -71,6 +89,12 @@ header .created-at { display: flex; align-items: center; }";
         echo "</style>";
     }
 
+    /**
+     * Vygenerovani tela stranky
+     *
+     * @param TestResult[] $testResults Vysledky jednotlivych testu.
+     * @param Arguments $config Konfigurace z prikazove radky.
+     */
     private static function renderBody($testResults, $config)
     {
         echo "<body>";
@@ -81,12 +105,24 @@ header .created-at { display: flex; align-items: center; }";
         echo "</body>";
     }
 
+    /**
+     * Vygenerovani hlavicky stranky.
+     *
+     * @param TestResult[] $testResults Vysledky jednotlivych testu.
+     * @param Arguments $config Konfigurace z prikazove radky.
+     */
     private static function renderHeader($testResults, $config)
     {
         echo "<header><h1>" . self::$title . "</h1> <div class='created-at'>Vytvořeno:<br>" . date("d. m. Y H:i:s") . "</div></header>";
         self::renderSubheader($testResults, $config);
     }
 
+    /**
+     * Vygenerovani podhlavicky (prezentace konfigurace a souhrn testu).
+     *
+     * @param TestResult[] $testsResult Vysledky jednotlivych testu.
+     * @param Arguments $config
+     */
     private static function renderSubheader($testsResult, $config)
     {
         echo "<section class='summary-container'>";
@@ -100,8 +136,7 @@ header .created-at { display: flex; align-items: center; }";
     /**
      * Vygenerovani karty s konfiguraci testu.
      *
-     * @param CommandLineArguments $config
-     * @return void
+     * @param Arguments $config
      */
     private static function renderConfigCard($config)
     {
@@ -114,6 +149,11 @@ header .created-at { display: flex; align-items: center; }";
         echo "</ul></div><div class='sumamry-item-footer'>Konfigurace testů</div></div>";
     }
 
+    /**
+     * Vytenerovani souhrnu za vsechny testy.
+     *
+     * @param TestResult[] $testsResult
+     */
     private static function renderStatusCard($testsResult)
     {
         list($success, $failed) = self::computeTestsSummary($testsResult);
@@ -131,20 +171,24 @@ header .created-at { display: flex; align-items: center; }";
     /**
      * Vypocet statistik uspesnosti testu.
      *
-     * @param TestPartResult $testsResult
-     * @return void
+     * @param TestResult[] $testsResult
      */
     private static function computeTestsSummary($testsResult)
     {
-        $result = [0, 0];
+        $result = [true => 0, false => 0];
 
         foreach ($testsResult as $test) {
-            $result[$test->isOk() ? 0 : 1]++;
+            $result[$test->isOk()]++;
         }
 
         return $result;
     }
 
+    /**
+     * Vygenerovani tabulky s vysledky jednotlivych testu.
+     *
+     * @param TestResults[] $testResults
+     */
     private static function renderTestsTable($testResults)
     {
         echo "<section class='table-results'><h1>Výsledky jednotlivých testů</h1><div class='table-results-container'>";

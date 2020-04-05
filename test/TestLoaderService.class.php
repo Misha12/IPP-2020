@@ -3,15 +3,15 @@ if (!isset($TEST_ITEM)) include 'TestItem.class.php';
 
 $TEST_LOADER = 1;
 
-class TestsLoaderService
+class TestsLoader
 {
     /**
      * Funkce pro vyhledani testovacich souboru a jejich provereni.
      *
-     * @param CommandLineArguments $config
+     * @param Arguments $config
      * @return TestItem[]
      */
-    public function findTests($config)
+    public static function findTests($config)
     {
         $tests = [];
         $files = $this->scanDirectory($config, $config->directory);
@@ -44,7 +44,14 @@ class TestsLoaderService
         return $tests;
     }
 
-    private function scanDirectory($config, $directory)
+    /**
+     * Prohledavani adresare (s podporou rekurzivniho vyhledavani).
+     *
+     * @param Arguments $config
+     * @param string $directory
+     * @return (string[]|string)[]
+     */
+    private static function scanDirectory($config, $directory)
     {
         $files = [];
 

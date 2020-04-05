@@ -7,17 +7,60 @@ $ARG_PARSE = 1;
 /**
  * Trida pro uchovavani nactenych parametru prikazove radky.
  */
-class CommandLineArguments
+class Arguments
 {
+    /**
+     * Priznak vyvolani napovedy
+     * @var boolean
+     */
     public $help = false;
+
+    /**
+     * Cesta k adresari s testy.
+     * @var string
+     */
     public $directory = DEFAULT_PATH;
+
+    /**
+     * Priznak rekurzivniho vyhledavani testu.
+     * @var boolean
+     */
     public $recursive = false;
+
+    /**
+     * Cesta k souboru, kde se nachazi analyzator kodu.
+     * @var string
+     */
     public $parseScript = DEFAULT_PARSE;
+
+    /**
+     * Cesta k souboru, kde se nachazi interpret.py
+     * @var string
+     */
     public $intScript = DEFAULT_INT;
+
+    /**
+     * Priznak, ze se maji spoustet pouze testy analyzatoru kodu
+     * @var boolean
+     */
     public $parseOnly = false;
+
+    /**
+     * Priznak, ze se maji spustit pouze testy interpretu.
+     * @var boolean
+     */
     public $intOnly = false;
 
+    /**
+     * Cesta k porovnavacimu nastroji XML vystupu.
+     * @var string
+     */
     public $jexamxml = DEFAULT_JEXAMXML;
+
+    /**
+     * Cesta ke konfiguraci nastroje JEXAMXML.
+     * @var string
+     */
     public $jexamxmlConfig = null;
 
     public function __construct()
@@ -63,49 +106,42 @@ class CommandLineArguments
 }
 
 /**
- * Sluzba pro nacitani parametru prikazove radky.
+ * Hlavni funkce pro nacitani parametru prikazove radky.
+ * @return Arguments
  */
-class CommandLineArgsParseService
+function parseCommandLineArgs()
 {
-    /**
-     * Hlavni funkce pro nacitani parametru prikazove radky.
-     *
-     * @return CommandLineArguments
-     */
-    public function getAndParse()
-    {
-        try {
-            $args = new CommandLineArguments();
-            $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
+    try {
+        $args = new Arguments();
+        $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
 
-            if (key_exists("help", $optArgs)) {
-                if (count($optArgs) > 1)
-                    throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
+        if (key_exists("help", $optArgs)) {
+            if (count($optArgs) > 1)
+                throw new ErrorException("--help cannot be combined with another parameters.", AppCodes::InvalidParameters);
 
-                $args->help = true;
-            }
-
-            $args->recursive = key_exists("recursive", $optArgs);
-            $args->intOnly = key_exists("int-only", $optArgs);
-            $args->parseOnly = key_exists("parse-only", $optArgs);
-
-            if (key_exists("directory", $optArgs)) $args->setDirectory($optArgs["directory"]);
-            if (key_exists("parse-script", $optArgs)) $args->setParseScript($optArgs["parse-script"]);
-            if (key_exists("int-script", $optArgs)) $args->setIntScript($optArgs["int-script"]);
-            if (key_exists("jexamxml", $optArgs)) $args->setJexamxmlPath($optArgs["jexamxml"]);
-
-            if ($args->parseOnly && $args->intOnly)
-                throw new ErrorException("--int-only and --parse-only cannot be combined.", AppCodes::InvalidParameters);
-
-            if ($args->parseOnly && key_exists("int-script", $optArgs))
-                throw new ErrorException("--int-script cannot be combined with --parse-only", AppCodes::InvalidParameters);
-
-            if ($args->intOnly && key_exists("parse-script", $optArgs))
-                throw new ErrorException("--parse-script cannot be combined with --int-only", AppCodes::InvalidParameters);
-
-            return $args;
-        } catch (ErrorException $e) {
-            errorExit($e->getCode(), $e->getMessage());
+            $args->help = true;
         }
+
+        $args->recursive = key_exists("recursive", $optArgs);
+        $args->intOnly = key_exists("int-only", $optArgs);
+        $args->parseOnly = key_exists("parse-only", $optArgs);
+
+        if (key_exists("directory", $optArgs)) $args->setDirectory($optArgs["directory"]);
+        if (key_exists("parse-script", $optArgs)) $args->setParseScript($optArgs["parse-script"]);
+        if (key_exists("int-script", $optArgs)) $args->setIntScript($optArgs["int-script"]);
+        if (key_exists("jexamxml", $optArgs)) $args->setJexamxmlPath($optArgs["jexamxml"]);
+
+        if ($args->parseOnly && $args->intOnly)
+            throw new ErrorException("--int-only and --parse-only cannot be combined.", AppCodes::InvalidParameters);
+
+        if ($args->parseOnly && key_exists("int-script", $optArgs))
+            throw new ErrorException("--int-script cannot be combined with --parse-only", AppCodes::InvalidParameters);
+
+        if ($args->intOnly && key_exists("parse-script", $optArgs))
+            throw new ErrorException("--parse-script cannot be combined with --int-only", AppCodes::InvalidParameters);
+
+        return $args;
+    } catch (ErrorException $e) {
+        errorExit($e->getCode(), $e->getMessage());
     }
 }

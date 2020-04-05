@@ -4,3 +4,4 @@
 *.html
 !template.html
 __pycache__
+xml_diff.xml

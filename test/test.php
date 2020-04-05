@@ -5,38 +5,34 @@ if (!isset($HELPER)) include 'helper.php';
 if (!isset($TEST_LOADER)) include 'TestLoaderService.class.php';
 if (!isset($HTML_GENERATOR)) include 'HTMLGenerator.class.php';
 
-// TODO: Možná z toho půjdou udělat static položky. Nebo dokonce funkce.
-$commandLineParser = new CommandLineArgsParseService();
-$testLoader = new TestsLoaderService();
-
-$config = $commandLineParser->getAndParse();
-
+$config = parseCommandLineArgs();
 if ($config->help) {
-    output("Testovací skript pro spuštění testů nad analyzátorem a interpreterem kódu IPPCode20." . PHP_EOL);
-    output("Test je možno ovlivnit následujícími parametry (Všechny parametry jsou volitelné a mají nastavenou výchozí hodnotu.):");
+    echo "Testovací skript pro spuštění testů nad analyzátorem a interpretem kódu IPPCode20.
 
-    output("--help\tOtevře nápovědu.");
-    output("--directory={path}\tCesta k testům. Výchozí je './'");
-    output("--recursive\tZapnutí vyhledávání testů bude probíhat rekurzivně.");
-    output("--parse-script={filepath}\Nastavení cesty k analyzátoru kódu IPPCode20. Cesta musí obsahovat i název souboru. Výchozí je './parse.php'");
-    output("--int-script={filepath}\tNastavení cesty k interpreteru kódu IPPCode20. Cesta musí obsahovat i název souboru. Výchozí je './interpret.py'");
-    output("--parse-only\tSpuštění testů pouze nad analyzátorem kódu. Nesmí se kombinovat s přepínači --int-script a --int-only.");
-    output("--int-only\tSpuštění testů pouze nad interpretací kódu IPPCode20. Nesmí se kombinovat s přepínači --parse-script a --parse-only");
-    output("--jexamxml={filepath}\tNastavení cesty k porovnávacímu nástroji jexamxml. Výchozí je (/pub/courses/ipp/jexamxml/jexamlxml.jar). Předpokládá se, že konfigurační soubor bude ve stejném adresáři.");
+Test je možno ovlivnit následujícími parametry (Všechny parametry jsou volitelné a mají nastavenou výchozí hodnotu.):
 
-    output();
+--help\tOtevře nápovědu.
+--directory={path}\tCesta k testům. Výchozí je './'.
+--recursive\tZapnutí vyhledávání testů bude probíhat rekurzivně.
+--parse-script={filepath}\Nastavení cesty k analyzátoru kódu IPPCode20. Cesta musí obsahovat i název souboru. Výchozí je './parse.php'.
+--int-script={filepath}\tNastavení cesty k interpreteru kódu IPPCode20. Cesta musí obsahovat i název souboru. Výchozí je './interpret.py'.
+--parse-only\tSpuštění testů pouze nad analyzátorem kódu. Nesmí se kombinovat s přepínači --int-script a --int-only.
+--int-only\tSpuštění testů pouze nad interpretací kódu IPPCode20. Nesmí se kombinovat s přepínači --parse-script a --parse-only
+--jexamxml={filepath}\tNastavení cesty k porovnávacímu nástroji jexamxml. Výchozí je (/pub/courses/ipp/jexamxml/jexamlxml.jar). Předpokládá se, že konfigurační soubor bude ve stejném adresáři.
+
+";
+
     exit(AppCodes::Success);
 }
 
-$tests = $testLoader->findTests($config);
-
+$tests = TestsLoader::findTests($config);
 $testResults = [];
 foreach ($tests as $key => $test) {
     try {
-        $test->initTest($config);
+        $test->initTest();
         $testResults[$key] = $test->runTest($config);
     } catch (Exception $e) {
-        output($e->getMessage());
+        output($e->getMessage(), true);
     }
 }
 
