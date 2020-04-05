@@ -14,7 +14,7 @@ class TestsLoader
     public static function findTests($config)
     {
         $tests = [];
-        $files = $this->scanDirectory($config, $config->directory);
+        $files = self::scanDirectory($config, $config->directory);
 
         foreach ($files as $file) {
             $key = $file["dirname"] . DIRECTORY_SEPARATOR . $file["filename"];
@@ -62,7 +62,7 @@ class TestsLoader
 
             if (is_dir($fullpath)) {
                 if ($config->recursive && $item !== "." && $item !== "..") {
-                    array_push($files, ...$this->scanDirectory($config, $fullpath));
+                    array_push($files, ...self::scanDirectory($config, $fullpath));
                 }
             } else {
                 $files[] = pathinfo($fullpath);

@@ -2,7 +2,7 @@
 if (!isset($APP_CONSTS)) include 'Consts.class.php';
 if (!isset($ARG_PARSE)) include 'ArgumentParser.class.php';
 if (!isset($HELPER)) include 'helper.php';
-if (!isset($TEST_LOADER)) include 'TestLoaderService.class.php';
+if (!isset($TEST_LOADER)) include 'TestLoader.class.php';
 if (!isset($HTML_GENERATOR)) include 'HTMLGenerator.class.php';
 
 $config = parseCommandLineArgs();
