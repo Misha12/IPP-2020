@@ -156,7 +156,7 @@ header .created-at { display: flex; align-items: center; }";
      */
     private static function renderStatusCard($testsResult)
     {
-        list($success, $failed) = self::computeTestsSummary($testsResult);
+        list($success, $failed) = array_values(self::computeTestsSummary($testsResult));
         $total = $success + $failed;
         $percentage = round(($success / $total) * 100);
         $result_state = $percentage < 40 ? 'bad' : ($percentage >= 40 && $percentage < 80 ? 'middle' : 'good');
