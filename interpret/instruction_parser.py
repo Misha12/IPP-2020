@@ -4,8 +4,7 @@ from xml.etree.ElementTree import parse as parse_xml, ParseError, Element
 from helper import exit_app
 from enums import exitCodes, ArgumentTypes, Frames, DataTypes
 import re
-from models import (InstructionArgument, SymbolInstructionArgument,
-                    VariableInstructionArgument)
+from models import (InstructionArgument, Symbol, Variable, Type, Label)
 
 
 class InstructionsParser():
@@ -75,7 +74,9 @@ class InstructionsParser():
                      'Unknown opcode. ({})'.format(opcode), True)
 
         args = InstructionsParser.parse_arguments(element)
-        return instructions.OPCODE_TO_CLASS_MAP[opcode](args)
+        # TODO: Kontrola, že skutečně přijde to, co očekáváme. Var místo symb,
+        #  atd...
+        return instructions.OPCODE_TO_CLASS_MAP[opcode](args, opcode)
 
     @staticmethod
     def parse_arguments(element: Element) -> List[InstructionArgument]:
@@ -117,22 +118,22 @@ class InstructionsParser():
         arg_type = arg.attrib.get('type')
         arg_value = arg.text if arg.text is not None else ''
 
-        if arg_type == ArgumentTypes.VARIABLE.value:
+        if arg_type == ArgumentTypes.LABEL.value:
+            InstructionsParser.validate_variable_name(arg_value, True)
+            return Label(arg_value)
+        elif arg_type == ArgumentTypes.VARIABLE.value:
             variable_parts = arg_value.split('@', 1)
 
             if len(variable_parts) == 2:
                 InstructionsParser.validate_scope(variable_parts[0])
-                InstructionsParser.validate_variable(variable_parts[1])
+                InstructionsParser.validate_variable_name(variable_parts[1])
 
                 if variable_parts[0] == 'GF':
-                    return VariableInstructionArgument(Frames.GLOBAL,
-                                                       variable_parts[1])
+                    return Variable(Frames.GLOBAL, variable_parts[1])
                 elif variable_parts[0] == 'TF':
-                    return VariableInstructionArgument(Frames.TEMPORARY,
-                                                       variable_parts[1])
+                    return Variable(Frames.TEMPORARY, variable_parts[1])
                 elif variable_parts[0] == 'LF':
-                    return VariableInstructionArgument(Frames.LOCAL,
-                                                       variable_parts[1])
+                    return Variable(Frames.LOCAL, variable_parts[1])
             else:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid variable. ({})'.format(arg_value), True)
@@ -141,18 +142,18 @@ class InstructionsParser():
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid value of nil. ({})'.format(arg_value), True)
 
-            return SymbolInstructionArgument(DataTypes.NIL, None)
+            return Symbol(DataTypes.NIL, None)
         elif arg_type == 'int':
             try:
-                return SymbolInstructionArgument(DataTypes.INT, int(arg_value))
+                return Symbol(DataTypes.INT, int(arg_value))
             except ValueError:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid int value. ({})'.format(arg_value), True)
         elif arg_type == 'bool':
             if arg_value == 'true':
-                return SymbolInstructionArgument(DataTypes.BOOL, True)
+                return Symbol(DataTypes.BOOL, True)
             elif arg_value == 'false':
-                return SymbolInstructionArgument(DataTypes.BOOL, False)
+                return Symbol(DataTypes.BOOL, False)
             else:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid boolean value. ({})'.format(arg_value), True)
@@ -162,7 +163,17 @@ class InstructionsParser():
                          'Text cannot contains #.', True)
 
             fixed_string = InstructionsParser.fix_string(arg_value)
-            return SymbolInstructionArgument(DataTypes.STRING, fixed_string)
+            return Symbol(DataTypes.STRING, fixed_string)
+        elif arg_type == 'type':
+            if arg_value == 'int':
+                return Type(int)
+            elif arg_value == 'string':
+                return Type(str)
+            elif arg_value == 'bool':
+                return Type(bool)
+            else:
+                exit_app(exitCodes.INVALID_XML_STRUCT,
+                         'Unknown type value. ({})'.format(arg_value), True)
         else:
             exit_app(exitCodes.INVALID_XML_STRUCT,
                      'Unknown argument type. ({})'.format(arg_type), True)
@@ -175,10 +186,12 @@ class InstructionsParser():
                      'Invalid scope. ({})'.format(scope), True)
 
     @staticmethod
-    def validate_variable(name: str):
-        if re.compile("^[^(LGT)F][_\\-$&%*!?a-zA-Z]\\S*$").match(name) is None:
+    def validate_variable_name(name: str, is_label: bool = False):
+        if re.compile(r"^[_\-$&%*!?a-zA-Z][_\-$&%*!?a-zA-Z0-9]*$").match(name)\
+                is None:
             exit_app(exitCodes.INVALID_XML_STRUCT,
-                     'Invalid variable name. ({})'.format(name), True)
+                     'Invalid {} name. ({})'.format(
+                         'label' if is_label else 'variable', name), True)
 
     @staticmethod
     def fix_string(value: str) -> str:

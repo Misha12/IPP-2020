@@ -4,6 +4,7 @@ from helper import exit_app
 from enums import exitCodes
 from argparse import ArgumentParser
 from instruction_parser import InstructionsParser
+from program import Program
 
 
 def argument_parse_error(message: str):
@@ -41,9 +42,7 @@ except Exception:
 
 instructions = InstructionsParser.parse_file(xml_file)
 
-print(instructions)
+program = Program(list(instructions.values()), input_file)
+program.run()
 
-for instruction in instructions.values():
-    print(instruction)
-    print(instruction.expectedArgTypes)
-    print(instruction.args)
+exit(program.exit_code)

@@ -158,7 +158,7 @@ header .created-at { display: flex; align-items: center; }";
     {
         list($success, $failed) = array_values(self::computeTestsSummary($testsResult));
         $total = $success + $failed;
-        $percentage = round(($success / $total) * 100);
+        $percentage = $total == 0 ? 0 : round(($success / $total) * 100);
         $result_state = $percentage < 40 ? 'bad' : ($percentage >= 40 && $percentage < 80 ? 'middle' : 'good');
 
         echo "<div class='summary-item'><div class='summary-item-content'><div class='test-summary-grid'>";

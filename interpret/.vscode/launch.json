@@ -10,7 +10,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
-            "args": ["--source=${workspaceFolder}/tests/toast_inst_swap.src"]
+            "args": [
+                "--source=${workspaceFolder}/../test/tests/int-only/vyzi_tests/should-pass/from-parse-only/every_instruction_program.src"
+            ]
         },
         {
             "name": "Launch Help",
