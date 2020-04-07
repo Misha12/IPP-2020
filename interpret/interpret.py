@@ -25,11 +25,19 @@ if arguments.source is None and arguments.input is None:
     exit_app(exitCodes.INVALID_ARGUMENTS,
              '--source or --input or both parameters are required.')
 
-# TODO: File read error
-xml_file = open(arguments.source,
-                'r') if arguments.source is not None else stdin
-input_file = open(
-    arguments.input, 'r') if arguments.input is not None else stdin
+xml_file = stdin
+try:
+    if arguments.source is not None:
+        xml_file = open(arguments.source, 'r')
+except Exception:
+    exit_app(exitCodes.CANNOT_READ_FILE, 'Cannot open XML file.')
+
+input_file = stdin
+try:
+    if arguments.input is not None:
+        input_file = open(arguments.input, 'r')
+except Exception:
+    exit_app(exitCodes.CANNOT_READ_FILE, 'Cannot open inputs file')
 
 instructions = InstructionsParser.parse_file(xml_file)
 

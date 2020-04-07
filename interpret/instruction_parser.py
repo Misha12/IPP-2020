@@ -41,7 +41,7 @@ class InstructionsParser():
             try:
                 order = int(element.attrib.get('order'))
 
-                if order < 0:
+                if order <= 0:
                     exit_app(exitCodes.INVALID_XML_STRUCT,
                              'Negative instructions order', True)
             except ValueError:

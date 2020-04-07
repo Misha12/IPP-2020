@@ -24,8 +24,6 @@ class Move(InstructionBase):
 class Defvar(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE]
 
-    pass
-
 
 OPCODE_TO_CLASS_MAP = {
     # Prace s ramci, volani funkci
