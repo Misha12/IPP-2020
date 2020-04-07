@@ -74,9 +74,30 @@ class InstructionsParser():
                      'Unknown opcode. ({})'.format(opcode), True)
 
         args = InstructionsParser.parse_arguments(element)
-        # TODO: Kontrola, že skutečně přijde to, co očekáváme. Var místo symb,
-        #  atd...
-        return instructions.OPCODE_TO_CLASS_MAP[opcode](args, opcode)
+        instruction = instructions.OPCODE_TO_CLASS_MAP[opcode](args, opcode)
+
+        for i in range(0, len(args)):
+            expected = instruction.expectedArgTypes[i]
+            real = args[i].arg_type
+
+            is_invalid = False
+
+            if expected == ArgumentTypes.SYMBOL:
+                if real != ArgumentTypes.VARIABLE and real != ArgumentTypes.SYMBOL:
+                    is_invalid = True
+            elif expected == ArgumentTypes.VARIABLE and real != ArgumentTypes.VARIABLE:
+                is_invalid = True
+            elif expected == ArgumentTypes.LABEL and real != ArgumentTypes.LABEL:
+                is_invalid = True
+            elif expected == ArgumentTypes.TYPE and real != ArgumentTypes.TYPE:
+                is_invalid = True
+
+            if is_invalid:
+                exit_app(exitCodes.INVALID_XML_STRUCT,
+                         'Invalid argument. Expected <{}>. Have: <{}>'
+                         .format(expected.value, real.value))
+
+        return instruction
 
     @staticmethod
     def parse_arguments(element: Element) -> List[InstructionArgument]:
@@ -115,6 +136,10 @@ class InstructionsParser():
 
     @staticmethod
     def parse_argument(arg: Element) -> InstructionArgument:
+        if len(list(arg)) > 0:
+            exit_app(exitCodes.INVALID_XML_STRUCT,
+                     'Argument contains unexpected elements.', True)
+
         arg_type = arg.attrib.get('type')
         arg_value = arg.text if arg.text is not None else ''
 

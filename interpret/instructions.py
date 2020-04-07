@@ -27,7 +27,8 @@ class Move(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        program.var_set('MOVE', self.args[0], self.args[1])
+        symb = program.get_symb('MOVE', self.args[1])
+        program.var_set('MOVE', self.args[0], symb)
 
 
 class Createframe(InstructionBase):
@@ -80,9 +81,9 @@ class Defvar(InstructionBase):
 class Return(InstructionBase):
     def execute(self, program: Program):
         if len(program.callStack) == 0:
-            exit_app(exitCodes.UNDEFINED_VARIABLE,
+            exit_app(exitCodes.UNDEFINED_VALUE,
                      'RETURN\nEmpty call stack.', True)
-            program.instruction_pointer = program.callStack.pop()
+        program.instruction_pointer = program.callStack.pop()
 
 
 # Prace s datovym zasobnikem
@@ -90,7 +91,8 @@ class PushS(InstructionBase):
     expectedArgTypes = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        program.dataStack.append(self.args[0])
+        symb = program.get_symb('PUSHS', self.args[0], True)
+        program.dataStack.append(symb)
 
 
 class PopS(InstructionBase):
@@ -168,8 +170,7 @@ class ComparableInstruction(InstructionBase):
                         ArgumentTypes.SYMBOL,
                         ArgumentTypes.SYMBOL]
 
-    allowedTypes = {DataTypes.INT.value,
-                    DataTypes.BOOL.value, DataTypes.STRING.value}
+    allowedTypes = [DataTypes.INT, DataTypes.BOOL, DataTypes.STRING]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         raise NotImplementedError
@@ -178,13 +179,13 @@ class ComparableInstruction(InstructionBase):
         symb1 = program.get_symb(self.opcode, self.args[1])
         symb2 = program.get_symb(self.opcode, self.args[2])
 
-        if symb1.data_type not in self.allowedTypes:
+        if not any(symb1.data_type == t for t in self.allowedTypes):
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in second operand at instruction {}.'
                      .format(self.opcode) + ' Expected: int, bool, string',
                      True)
 
-        if symb2.data_type not in self.allowedTypes:
+        if not any(symb2.data_type == t for t in self.allowedTypes):
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in second operand at instruction {}.'
                      .format(self.opcode) + ' Expected: int, bool, string',
@@ -211,8 +212,8 @@ class Gt(ComparableInstruction):
 
 
 class Eq(ComparableInstruction):
-    allowedTypes = {DataTypes.INT.value, DataTypes.BOOL.value,
-                    DataTypes.STRING.value, DataTypes.NIL}
+    allowedTypes = [DataTypes.INT, DataTypes.BOOL,
+                    DataTypes.STRING, DataTypes.NIL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         if symb1.data_type == DataTypes.NIL:
@@ -224,14 +225,14 @@ class Eq(ComparableInstruction):
 
 
 class And(ComparableInstruction):
-    allowedTypes = {DataTypes.BOOL.value}
+    allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value and symb2.value
 
 
 class Or(ComparableInstruction):
-    allowedTypes = {DataTypes.BOOL.value}
+    allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value or symb2.value
@@ -310,7 +311,7 @@ class Read(InstructionBase):
                 line = program.input.readline().rstrip()
         except Exception:
             line = None
-
+        
         arg_type = self.args[1]
 
         if line is None:
@@ -339,12 +340,15 @@ class Write(InstructionBase):
     expectedArgTypes = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('WRITE', self.args[0])
+        symb = program.get_symb('WRITE', self.args[0], True)
 
         if symb.data_type == DataTypes.NIL:
             print('', end='')
         elif symb.data_type == DataTypes.BOOL:
-            print(str(symb.value).lower(), end='')
+            if symb.value:
+                print('true', end='')
+            else:
+                print('false', end='')
         else:
             print(symb.value, end='')
 
@@ -355,13 +359,13 @@ class Concat(InstructionBase):
                         ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb1 = program.get_symb('CONCAT', self.args[1])
+        symb1 = program.get_symb('CONCAT', self.args[1], True)
 
         if symb1.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'CONCAT\nInvalid type at second operand.', True)
 
-        symb2 = program.get_symb('CONCAT', self.args[2])
+        symb2 = program.get_symb('CONCAT', self.args[2], True)
 
         if symb2.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -375,7 +379,7 @@ class Strlen(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        string = program.get_symb('STRLEN', self.args[1])
+        string = program.get_symb('STRLEN', self.args[1], True)
 
         if string.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -390,8 +394,8 @@ class Getchar(InstructionBase):
                         ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        string = program.get_symb('GETCHAR', self.args[1])
-        index = program.get_symb('GETCHAR', self.args[2])
+        string = program.get_symb('GETCHAR', self.args[1], True)
+        index = program.get_symb('GETCHAR', self.args[2], True)
 
         if string.data_type != DataTypes.STRING or\
                 index.data_type != DataTypes.INT:
@@ -421,14 +425,15 @@ class Setchar(InstructionBase):
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'SETCHAR\nExpected: string variable, int, string', True)
 
-        if len(toModify) == 0:
+        if len(toModify.value) == 0 or index.value >= len(variable.value):
             exit_app(exitCodes.INVALID_STRING_OPERATION,
                      'SETCHAR\nZero length of to modify characters.', True)
 
         try:
-            result = "{}{}{}".format(variable.value[:index], toModify[0],
-                                     variable.value[index + 1:])
-            program.var_set('SETCHAR', variable,
+            result = "{}{}{}".format(variable.value[:index.value],
+                                     toModify.value[0],
+                                     variable.value[index.value + 1:])
+            program.var_set('SETCHAR', self.args[0],
                             Symbol(DataTypes.STRING, result))
         except IndexError:
             exit_app(exitCodes.INVALID_STRING_OPERATION,
@@ -510,7 +515,7 @@ class Exit(InstructionBase):
     expectedArgTypes = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('EXIT', self.args[0])
+        symb = program.get_symb('EXIT', self.args[0], True)
 
         if symb.data_type != DataTypes.INT:
             exit_app(exitCodes.INVALID_OPERAND_VALUE,

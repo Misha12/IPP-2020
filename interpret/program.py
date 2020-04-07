@@ -11,7 +11,7 @@ class Program():
         self.input = data_input
         self.instruction_pointer = 0
         self.GF: Dict[str, Symbol] = dict()
-        self.TF: Dict[str, Symbol]
+        self.TF: Dict[str, Symbol] = None
         self.LFStack: List[Dict[str, Symbol]] = list()
         self.dataStack: List[Symbol] = list()
         self.callStack: List[int] = list()
@@ -34,8 +34,9 @@ class Program():
 
     def run(self):
         while len(self.instructions) > self.instruction_pointer:
+            instruction = self.instructions[self.instruction_pointer]
             self.instruction_pointer += 1
-            self.instructions[self.instruction_pointer - 1].execute(self)
+            instruction.execute(self)
 
     def var_exists(self, var: Variable):
         if var.frame == Frames.GLOBAL:
@@ -78,11 +79,16 @@ class Program():
         elif var.frame == Frames.LOCAL:
             return self.LFStack[-1][var.value]
 
-    def get_symb(self, opcode: str, symb: Symbol or Variable):
+    def get_symb(self, opcode: str, symb: Symbol or Variable, required_value: bool = False):
+        result = symb
         if is_symbol_variable(symb):
-            return self.var_get(opcode, symb)
+            result = self.var_get(opcode, symb)
 
-        return symb
+        if required_value and result is None:
+            exit_app(exitCodes.UNDEFINED_VALUE,
+                     '{}\nSymbol or variable is undefined.'.format(opcode))
+
+        return result
 
     def exit(self, code: int):
         self.instruction_pointer = len(self.instructions)
@@ -90,7 +96,8 @@ class Program():
 
     def get_state(self):
         return "\n".join([
-            "Input type: {}".format('stdin' if self.input == stdin else 'file'),
+            "Input type: {}".format(
+                'stdin' if self.input == stdin else 'file'),
             "IP: {}".format(self.instruction_pointer),
             "GlobalFrame: {}".format(self.GF),
             "LocalFrame: {}".format(self.LFStack),

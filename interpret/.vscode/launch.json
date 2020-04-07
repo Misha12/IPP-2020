@@ -11,7 +11,8 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=${workspaceFolder}/../test/tests/int-only/vyzi_tests/should-pass/from-parse-only/every_instruction_program.src"
+                "--source=${workspaceFolder}/../test/tests/int-only/venki_tests/xml_tests/xml_whitespaces_in_xml.src",
+                "--input=${workspaceFolder}/../test/tests/int-only/venki_tests/xml_tests/xml_whitespaces_in_xml.in"
             ]
         },
         {
@@ -20,7 +21,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
-            "args": ["--help"]
+            "args": [
+                "--help"
+            ]
         },
         {
             "name": "Launch Help (error - missing arguments)",
