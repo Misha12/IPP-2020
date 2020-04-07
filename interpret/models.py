@@ -12,3 +12,9 @@ class SymbolInstructionArgument(InstructionArgument):
         self.data_type = data_type
         self.value = value
 
+
+class VariableInstructionArgument(InstructionArgument):
+    def __init__(self, frame: Frames, value: Any):
+        self.arg_type = ArgumentTypes.VARIABLE
+        self.frame = frame
+        self.value = value

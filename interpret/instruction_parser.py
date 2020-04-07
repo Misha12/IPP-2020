@@ -4,7 +4,8 @@ from xml.etree.ElementTree import parse as parse_xml, ParseError, Element
 from helper import exit_app
 from enums import exitCodes, ArgumentTypes, Frames, DataTypes
 import re
-from models import InstructionArgument, SymbolInstructionArgument
+from models import (InstructionArgument, SymbolInstructionArgument,
+                    VariableInstructionArgument)
 
 
 class InstructionsParser():
@@ -123,19 +124,15 @@ class InstructionsParser():
                 InstructionsParser.validate_scope(variable_parts[0])
                 InstructionsParser.validate_variable(variable_parts[1])
 
-                scope = None
                 if variable_parts[0] == 'GF':
-                    scope = Frames.GLOBAL
+                    return VariableInstructionArgument(Frames.GLOBAL,
+                                                       variable_parts[1])
                 elif variable_parts[0] == 'TF':
-                    scope = Frames.TEMPORARY
+                    return VariableInstructionArgument(Frames.TEMPORARY,
+                                                       variable_parts[1])
                 elif variable_parts[0] == 'LF':
-                    scope = Frames.LOCAL
-
-                return {
-                    'type': ArgumentTypes.VARIABLE,
-                    'scope': scope,
-                    'value': variable_parts[1]
-                }
+                    return VariableInstructionArgument(Frames.LOCAL,
+                                                       variable_parts[1])
             else:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid variable. ({})'.format(arg_value), True)
@@ -144,45 +141,28 @@ class InstructionsParser():
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid value of nil. ({})'.format(arg_value), True)
 
-            return {
-                'type': ArgumentTypes.SYMBOL,
-                'value_type': DataTypes.NIL
-            }
+            return SymbolInstructionArgument(DataTypes.NIL, None)
         elif arg_type == 'int':
             try:
-                return {
-                    'type': ArgumentTypes.SYMBOL,
-                    'value_type': DataTypes.INT,
-                    'value': int(arg_value)
-                }
+                return SymbolInstructionArgument(DataTypes.INT, int(arg_value))
             except ValueError:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid int value. ({})'.format(arg_value), True)
         elif arg_type == 'bool':
-            result = {
-                'type': ArgumentTypes.SYMBOL,
-                'value_type': DataTypes.BOOL
-            }
-
             if arg_value == 'true':
-                result['value'] = True
+                return SymbolInstructionArgument(DataTypes.BOOL, True)
             elif arg_value == 'false':
-                result['value'] = False
+                return SymbolInstructionArgument(DataTypes.BOOL, False)
             else:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Invalid boolean value. ({})'.format(arg_value), True)
-
-            return result
         elif arg_type == 'string':
             if re.compile('.*#.*').match(arg_value):
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Text cannot contains #.', True)
 
-            return {
-                'type': ArgumentTypes.SYMBOL,
-                'value_type': DataTypes.STRING,
-                'value': InstructionsParser.fix_string(arg_value)
-            }
+            fixed_string = InstructionsParser.fix_string(arg_value)
+            return SymbolInstructionArgument(DataTypes.STRING, fixed_string)
         else:
             exit_app(exitCodes.INVALID_XML_STRUCT,
                      'Unknown argument type. ({})'.format(arg_type), True)
