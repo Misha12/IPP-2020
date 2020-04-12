@@ -63,6 +63,14 @@ class Arguments
      */
     public $jexamxmlConfig = null;
 
+    /**
+     * Vlastni bezkolizni volitelny parametr pro beh v ladicim rezimu. 
+     * Vypisuje na stderr, ktery test byl prave provaden
+     *
+     * @var boolean
+     */
+    public $debug = false;
+
     public function __construct()
     {
         $this->jexamxmlConfig = dirname(DEFAULT_JEXAMXML) . "/options";
@@ -113,7 +121,7 @@ function parseCommandLineArgs()
 {
     try {
         $args = new Arguments();
-        $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:"]);
+        $optArgs = getopt("", ["help", "directory:", "recursive", "parse-script:", "int-script:", "parse-only", "int-only", "jexamxml:", "debug"]);
 
         if (key_exists("help", $optArgs)) {
             if (count($optArgs) > 1)
@@ -125,6 +133,7 @@ function parseCommandLineArgs()
         $args->recursive = key_exists("recursive", $optArgs);
         $args->intOnly = key_exists("int-only", $optArgs);
         $args->parseOnly = key_exists("parse-only", $optArgs);
+        $args->debug = key_exists("debug", $optArgs);
 
         if (key_exists("directory", $optArgs)) $args->setDirectory($optArgs["directory"]);
         if (key_exists("parse-script", $optArgs)) $args->setParseScript($optArgs["parse-script"]);

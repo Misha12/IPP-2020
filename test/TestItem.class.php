@@ -278,6 +278,9 @@ class TestItem
         $result = new TestPartResult();
         $fullPath = $this->getFullPath();
 
+        if ($config->debug)
+            output("Running interpret test: $fullPath", true);
+
         $result->expectedExitCode = intval(trim(file_get_contents("$fullPath.rc")));
         $result->stdoutFile = "$fullPath.int_out_tmp";
         $result->stderrFile = "$fullPath.int_err_tmp";
@@ -317,6 +320,9 @@ class TestItem
     {
         $result = new TestPartResult();
         $fullPath = $this->getFullPath();
+
+        if ($config->debug)
+            output("Running parse.php test: $fullPath", True);
 
         $result->expectedExitCode = intval(trim(file_get_contents($fullPath . ".rc")));
         $result->stdoutFile = "$fullPath.out_tmp";

@@ -81,7 +81,7 @@ header .created-at { display: flex; align-items: center; }";
 .test-result-columns div { padding: 0px 5px; }
 .test-result-columns div:first-child { width: 100%; }
 .test-result-columns table { width: 60%; }
-.test-result-columns table tr th { text-align: left; }
+.test-result-columns table tr th { width: 180px; text-align: left; }
 .test-result-status { font-weight: 400; }
 .test-result-table-error-text td { padding-top: 10px; }
 .test-result-table-error-text td pre { margin-top: 10px; }";
