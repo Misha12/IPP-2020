@@ -86,7 +86,7 @@ class Program():
             return self.LFStack[-1][var.value]
 
     def get_symb(self, opcode: str, symb: Symbol or Variable,
-                 required_value: bool = False):
+                 required_value: bool = True):
         result = symb
         if is_symbol_variable(symb):
             result = self.var_get(opcode, symb)

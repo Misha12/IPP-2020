@@ -83,11 +83,14 @@ class InstructionsParser():
             is_invalid = False
 
             if expected == ArgumentTypes.SYMBOL:
-                if real != ArgumentTypes.VARIABLE and real != ArgumentTypes.SYMBOL:
+                if real != ArgumentTypes.VARIABLE and \
+                        real != ArgumentTypes.SYMBOL:
                     is_invalid = True
-            elif expected == ArgumentTypes.VARIABLE and real != ArgumentTypes.VARIABLE:
+            elif expected == ArgumentTypes.VARIABLE and \
+                    real != ArgumentTypes.VARIABLE:
                 is_invalid = True
-            elif expected == ArgumentTypes.LABEL and real != ArgumentTypes.LABEL:
+            elif expected == ArgumentTypes.LABEL and \
+                    real != ArgumentTypes.LABEL:
                 is_invalid = True
             elif expected == ArgumentTypes.TYPE and real != ArgumentTypes.TYPE:
                 is_invalid = True
@@ -196,9 +199,17 @@ class InstructionsParser():
                 return Type(str)
             elif arg_value == 'bool':
                 return Type(bool)
+            elif arg_value == 'float':
+                return Type(float)
             else:
                 exit_app(exitCodes.INVALID_XML_STRUCT,
                          'Unknown type value. ({})'.format(arg_value), True)
+        elif arg_type == 'float':
+            try:
+                return Symbol(DataTypes.FLOAT, float.fromhex(arg_value))
+            except Exception:
+                exit_app(exitCodes.INVALID_XML_STRUCT,
+                         'Invalid format of operand.')
         else:
             exit_app(exitCodes.INVALID_XML_STRUCT,
                      'Unknown argument type. ({})'.format(arg_type), True)

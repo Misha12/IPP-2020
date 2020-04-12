@@ -27,7 +27,7 @@ class Move(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('MOVE', self.args[1])
+        symb = program.get_symb('MOVE', self.args[1], False)
         program.var_set('MOVE', self.args[0], symb)
 
 
@@ -91,7 +91,7 @@ class PushS(InstructionBase):
     expectedArgTypes = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('PUSHS', self.args[0], True)
+        symb = program.get_symb('PUSHS', self.args[0])
         program.dataStack.append(symb)
 
 
@@ -121,17 +121,19 @@ class MathInstructionBase(InstructionBase):
         symb1 = program.get_symb(self.opcode, self.args[1])
         symb2 = program.get_symb(self.opcode, self.args[2])
 
-        if symb1.data_type != DataTypes.INT:
+        if symb1.data_type != DataTypes.INT and \
+                symb1.data_type != DataTypes.FLOAT:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in second operand at instruction {}.'
-                     .format(self.opcode) + ' Expected: int', True)
+                     .format(self.opcode) + ' Expected: int or float', True)
 
-        if symb2.data_type != DataTypes.INT:
+        if symb2.data_type != DataTypes.INT and\
+                symb2.data_type != DataTypes.FLOAT:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in first operand at instruction {}.'
-                     .format(self.opcode) + ' Expected: int', True)
+                     .format(self.opcode) + ' Expected: int or float', True)
 
-        if symb1.data_type != symb1.data_type and\
+        if symb1.data_type != symb2.data_type and\
                 symb1.data_type != DataTypes.NIL and\
                 symb2.data_type != DataTypes.NIL:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -170,7 +172,8 @@ class ComparableInstruction(InstructionBase):
                         ArgumentTypes.SYMBOL,
                         ArgumentTypes.SYMBOL]
 
-    allowedTypes = [DataTypes.INT, DataTypes.BOOL, DataTypes.STRING]
+    allowedTypes = [DataTypes.INT, DataTypes.BOOL,
+                    DataTypes.STRING, DataTypes.FLOAT]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         raise NotImplementedError
@@ -182,13 +185,15 @@ class ComparableInstruction(InstructionBase):
         if not any(symb1.data_type == t for t in self.allowedTypes):
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in second operand at instruction {}.'
-                     .format(self.opcode) + ' Expected: int, bool, string',
+                     .format(self.opcode) +
+                     ' Expected: int, bool, string or float',
                      True)
 
         if not any(symb2.data_type == t for t in self.allowedTypes):
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'Incomatible type in second operand at instruction {}.'
-                     .format(self.opcode) + ' Expected: int, bool, string',
+                     .format(self.opcode) +
+                     ' Expected: int, bool, string or float',
                      True)
 
         if symb1.data_type != symb2.data_type and\
@@ -334,13 +339,25 @@ class Read(InstructionBase):
             except ValueError:
                 program.var_set(
                     'READ', self.args[0], Symbol(DataTypes.NIL, None))
+        elif arg_type.type is float:
+            try:
+                try:
+                    float_value = float(line)
+                except ValueError:
+                    float_value = float.fromhex(line)
+            except Exception:
+                program.var_set(
+                    'READ', self.args[0], Symbol(DataTypes.NIL, None))
+            else:
+                program.var_set('READ', self.args[0], Symbol(
+                    DataTypes.FLOAT, float_value))
 
 
 class Write(InstructionBase):
     expectedArgTypes = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('WRITE', self.args[0], True)
+        symb = program.get_symb('WRITE', self.args[0])
 
         if symb.data_type == DataTypes.NIL:
             print('', end='')
@@ -349,6 +366,8 @@ class Write(InstructionBase):
                 print('true', end='')
             else:
                 print('false', end='')
+        elif symb.data_type == DataTypes.FLOAT:
+            print(symb.value.hex(), end='')
         else:
             print(symb.value, end='')
 
@@ -359,13 +378,13 @@ class Concat(InstructionBase):
                         ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb1 = program.get_symb('CONCAT', self.args[1], True)
+        symb1 = program.get_symb('CONCAT', self.args[1])
 
         if symb1.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'CONCAT\nInvalid type at second operand.', True)
 
-        symb2 = program.get_symb('CONCAT', self.args[2], True)
+        symb2 = program.get_symb('CONCAT', self.args[2])
 
         if symb2.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -379,7 +398,7 @@ class Strlen(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        string = program.get_symb('STRLEN', self.args[1], True)
+        string = program.get_symb('STRLEN', self.args[1])
 
         if string.data_type != DataTypes.STRING:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -394,8 +413,8 @@ class Getchar(InstructionBase):
                         ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        string = program.get_symb('GETCHAR', self.args[1], True)
-        index = program.get_symb('GETCHAR', self.args[2], True)
+        string = program.get_symb('GETCHAR', self.args[1])
+        index = program.get_symb('GETCHAR', self.args[2])
 
         if string.data_type != DataTypes.STRING or\
                 index.data_type != DataTypes.INT:
@@ -445,7 +464,7 @@ class Type(InstructionBase):
     expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
-        symb = program.get_symb('TYPE', self.args[1])
+        symb = program.get_symb('TYPE', self.args[1], False)
 
         if symb is None:
             program.var_set('TYPE', self.args[0], Symbol(DataTypes.STRING, ''))
@@ -542,6 +561,48 @@ class Break(InstructionBase):
         print(program.get_state(), file=stderr)
 
 
+# Rozsireni FLOAT
+class Int2Float(InstructionBase):
+    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+
+    def execute(self, program: Program):
+        symb = program.get_symb('INT2FLOAT', self.args[1])
+
+        if symb.data_type != DataTypes.INT:
+            exit_app(exitCodes.INVALID_DATA_TYPE,
+                     'INT2CHAR\nInvalid data type' +
+                     ' Expected INT in second parameter.')
+
+        value = float(symb.value)
+        symbol = Symbol(DataTypes.FLOAT, value)
+        program.var_set('INT2FLOAT', self.args[0], symbol)
+
+
+class Float2Int(InstructionBase):
+    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+
+    def execute(self, program: Program):
+        symb = program.get_symb('FLOAT2INT', self.args[1])
+
+        if symb.data_type != DataTypes.FLOAT:
+            exit_app(exitCodes.INVALID_DATA_TYPE,
+                     'INT2CHAR\nInvalid data type' +
+                     ' Expected FLOAT in second parameter.')
+
+        value = int(symb.value)
+        symbol = Symbol(DataTypes.INT, value)
+        program.var_set('FLOAT2INT', self.args[0], symbol)
+
+
+class Div(MathInstructionBase):
+    def compute(self, symb1: Symbol, symb2: Symbol):
+        if symb2.value == 0.0:
+            exit_app(exitCodes.INVALID_OPERAND_VALUE,
+                     'DIV\nDetected zero division.', True)
+
+        return Symbol(DataTypes.FLOAT, symb1.value / symb2.value)
+
+
 OPCODE_TO_CLASS_MAP = {
     # 6.4.1 Prace s ramci, volani funkci
     "MOVE": Move,
@@ -592,5 +653,10 @@ OPCODE_TO_CLASS_MAP = {
 
     # 6.4.8 Ladici instrukce
     "DPRINT": DPrint,
-    "BREAK": Break
+    "BREAK": Break,
+
+    # Rozsireni FLOAT
+    "INT2FLOAT": Int2Float,
+    "FLOAT2INT": Float2Int,
+    "DIV": Div
 }

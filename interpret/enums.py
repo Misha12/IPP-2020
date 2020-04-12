@@ -34,3 +34,4 @@ class DataTypes(Enum):
     INT = 'int'
     BOOL = 'bool'
     STRING = 'string'
+    FLOAT = 'float'
