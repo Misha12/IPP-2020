@@ -311,7 +311,7 @@ class Read(InstructionBase):
                 line = program.input.readline().rstrip()
         except Exception:
             line = None
-        
+
         arg_type = self.args[1]
 
         if line is None:
