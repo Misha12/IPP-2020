@@ -1,7 +1,0 @@
-*.hobit
-*.out_tmp
-*.err_tmp
-*.html
-!template.html
-__pycache__
-xml_diff.xml
