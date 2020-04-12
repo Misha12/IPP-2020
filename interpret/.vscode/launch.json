@@ -11,8 +11,8 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=${workspaceFolder}/../test/tests/int-only/venki_tests/float_tests/float_div_float_float.src",
-                "--input=${workspaceFolder}/../test/tests/int-only/venki_tests/float_tests/float_div_float_float.in"
+                "--source=${workspaceFolder}/../test/tests/int-only/stack_calc/kalkulacka_STACK_rozsireni.src",
+                "--input=${workspaceFolder}/../test/tests/int-only/stack_calc/kalkulacka_STACK_rozsireni.in"
             ]
         },
         {

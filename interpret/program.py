@@ -113,3 +113,16 @@ class Program():
             "CallStack: {}".format(self.callStack),
             "Labels: {}".format(self.labels)
         ])
+
+    def pop_stack(self, required_count: int):
+        if len(self.dataStack) < required_count:
+            exit_app(exitCodes.UNDEFINED_VALUE,
+                     'Invalid count of required arguments in ' +
+                     'stack at instruction {}'.format(
+                         self.instructions[self.instruction_pointer].opcode))
+
+        stack_data = list()
+        for i in range(required_count):
+            stack_data.append(self.dataStack.pop())
+
+        return stack_data
