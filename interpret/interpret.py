@@ -5,6 +5,7 @@ from enums import exitCodes
 from argparse import ArgumentParser
 from instruction_parser import InstructionsParser
 from program import Program
+from stats import Stats
 
 
 def argument_parse_error(message: str):
@@ -18,6 +19,9 @@ if '--help' in sys.argv and len(sys.argv) > 2:
 parser = ArgumentParser()
 parser.add_argument('--source', type=str)
 parser.add_argument('--input', type=str)
+parser.add_argument('--stats', type=str)
+parser.add_argument('--insts', default=False, action='store_true')
+parser.add_argument('--vars', default=False, action='store_true')
 parser.error = argument_parse_error
 
 arguments = parser.parse_args()
@@ -40,9 +44,26 @@ try:
 except Exception:
     exit_app(exitCodes.CANNOT_READ_FILE, 'Cannot open inputs file')
 
-instructions = InstructionsParser.parse_file(xml_file)
+stats: Stats = None
+if arguments.stats is not None:
+    try:
+        if not arguments.insts and not arguments.vars:
+            exit_app(exitCodes.INVALID_ARGUMENTS,
+                     'For stats parameter is required minimal ' +
+                     'one of --vars or --insts parameters.')
 
-program = Program(list(instructions.values()), input_file)
+        stats_file = open(arguments.stats, 'w+')
+        stats = Stats(stats_file)
+    except Exception as e:
+        print(e)
+        exit_app(exitCodes.CANNOT_WRITE_FILE, 'Cannot open stats file')
+
+instructions = InstructionsParser.parse_file(xml_file)
+program = Program(list(instructions.values()), input_file, stats)
 program.run()
+
+if stats is not None:
+    stats.save()
+    stats_file.close()
 
 exit(program.exit_code)

@@ -4,6 +4,7 @@ from enum import IntEnum, Enum
 class exitCodes(IntEnum):
     INVALID_ARGUMENTS = 10
     CANNOT_READ_FILE = 11
+    CANNOT_WRITE_FILE = 12
     INVALID_XML_FORMAT = 31
     INVALID_XML_STRUCT = 32
     SEMANTIC_ERROR = 52

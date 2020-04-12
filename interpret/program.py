@@ -4,10 +4,11 @@ from enums import Frames, exitCodes
 from helper import exit_app
 import instructions as instrs
 from sys import stdin
+from stats import Stats
 
 
 class Program():
-    def __init__(self, instructions: List, data_input: IO):
+    def __init__(self, instructions: List, data_input: IO, stats: Stats):
         self.input = data_input
         self.instruction_pointer = 0
         self.GF: Dict[str, Symbol] = dict()
@@ -16,6 +17,7 @@ class Program():
         self.dataStack: List[Symbol] = list()
         self.callStack: List[int] = list()
         self.exit_code = 0
+        self.stats = stats
 
         # <label, instructionPointerPosition>
         self.labels: Dict[str, int] = dict()
@@ -37,6 +39,10 @@ class Program():
             instruction = self.instructions[self.instruction_pointer]
             self.instruction_pointer += 1
             instruction.execute(self)
+
+            if self.stats is not None:
+                self.stats.increment_insts()
+                self.stats.increment_vars(self.GF, self.LFStack, self.TF)
 
     def var_exists(self, var: Variable):
         if var.frame == Frames.GLOBAL:
@@ -79,7 +85,8 @@ class Program():
         elif var.frame == Frames.LOCAL:
             return self.LFStack[-1][var.value]
 
-    def get_symb(self, opcode: str, symb: Symbol or Variable, required_value: bool = False):
+    def get_symb(self, opcode: str, symb: Symbol or Variable,
+                 required_value: bool = False):
         result = symb
         if is_symbol_variable(symb):
             result = self.var_get(opcode, symb)
