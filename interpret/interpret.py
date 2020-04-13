@@ -53,7 +53,7 @@ if arguments.stats is not None:
                      'one of --vars or --insts parameters.')
 
         stats_file = open(arguments.stats, 'w+')
-        stats = Stats(stats_file)
+        stats = Stats(stats_file, arguments.insts, arguments.vars)
     except Exception as e:
         print(e)
         exit_app(exitCodes.CANNOT_WRITE_FILE, 'Cannot open stats file')
