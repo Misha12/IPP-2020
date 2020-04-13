@@ -9,3 +9,4 @@ xml_diff.xml
 *.int_*_tmp
 todo.txt
 interpret/data/
+*.stats

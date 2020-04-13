@@ -507,11 +507,16 @@ class Jumpifeq(Jump):
         symb1 = program.get_symb('JUMPIFEQ', self.args[1])
         symb2 = program.get_symb('JUMPIFEQ', self.args[2])
 
-        if symb1.data_type != symb2.data_type:
+        if symb2.data_type == symb1.data_type or\
+                symb1.data_type == DataTypes.NIL or\
+                symb2.data_type == DataTypes.NIL:
+            if symb2.value == symb1.value or\
+                    symb2.data_type == DataTypes.NIL or\
+                    symb1.data_type == DataTypes.NIL:
+                Jump.execute(self, program)
+        else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'JUMPIFEQ\nOperands must have same type.', True)
-        elif symb1.data_type == DataTypes.NIL or symb1.value == symb2.value:
-            Jump.execute(self, program)
 
 
 class Jumpifneq(Jump):
@@ -522,11 +527,16 @@ class Jumpifneq(Jump):
         symb1 = program.get_symb('JUMPNIFEQ', self.args[1])
         symb2 = program.get_symb('JUMPNIFEQ', self.args[2])
 
-        if symb1.data_type != symb2.data_type:
+        if symb2.data_type == symb1.data_type or\
+                symb1.data_type == DataTypes.NIL or\
+                symb2.data_type == DataTypes.NIL:
+            if symb2.value != symb1.value or\
+                    symb2.data_type == DataTypes.NIL or\
+                    symb1.data_type == DataTypes.NIL:
+                Jump.execute(self, program)
+        else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
-                     'JUMPNIFEQ\nOperands must have same type.', True)
-        elif symb1.data_type == DataTypes.NIL or symb1.value != symb2.value:
-            Jump.execute(self, program)
+                     'JUMPIFEQ\nOperands must have same type.', True)
 
 
 class Exit(InstructionBase):
@@ -738,12 +748,17 @@ class Jumpifeqs(Jump):
     def execute(self, program: Program):
         symbols = program.pop_stack(2)
 
-        if symbols[1].data_type != symbols[0].data_type:
+        symb2 = symbols[0]
+        symb1 = symbols[1]
+
+        if symb2.data_type == symb1.data_type or\
+                symb1.data_type == DataTypes.NIL or\
+                symb2.data_type == DataTypes.NIL:
+            if symb2.value == symb1.value:
+                Jump.execute(self, program)
+        else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'JUMPIFEQS\nOperands must have same type.', True)
-        elif symbols[1].data_type == DataTypes.NIL or\
-                symbols[1].value == symbols[0].value:
-            Jump.execute(self, program)
 
 
 class Jumpifneqs(Jump):
@@ -752,12 +767,51 @@ class Jumpifneqs(Jump):
     def execute(self, program: Program):
         symbols = program.pop_stack(2)
 
-        if symbols[1].data_type != symbols[0].data_type:
+        symb2 = symbols[0]
+        symb1 = symbols[1]
+
+        if symb2.data_type == symb1.data_type or\
+                symb1.data_type == DataTypes.NIL or\
+                symb2.data_type == DataTypes.NIL:
+            if symb2.value != symb1.value or\
+                    symb2.data_type == DataTypes.NIL or\
+                    symb1.data_type == DataTypes.NIL:
+                Jump.execute(self, program)
+        else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
-                     'JUMPNIFEQS\nOperands must have same type.', True)
-        elif symbols[1].data_type == DataTypes.NIL or\
-                symbols[1].value != symbols[0].value:
-            Jump.execute(self, program)
+                     'JUMPIFEQS\nOperands must have same type.', True)
+
+
+class Int2Floats(InstructionBase):
+    expectedArgTypes = []
+
+    def execute(self, program: Program):
+        symb = program.pop_stack(1)[0]
+
+        if symb.data_type != DataTypes.INT:
+            exit_app(exitCodes.INVALID_DATA_TYPE,
+                     'INT2CHAR\nInvalid data type' +
+                     ' Expected INT in second parameter.')
+
+        value = float(symb.value)
+        symbol = Symbol(DataTypes.FLOAT, value)
+        program.dataStack.append(symbol)
+
+
+class Float2Ints(InstructionBase):
+    expectedArgTypes = []
+
+    def execute(self, program: Program):
+        symb = program.pop_stack(1)[0]
+
+        if symb.data_type != DataTypes.FLOAT:
+            exit_app(exitCodes.INVALID_DATA_TYPE,
+                     'INT2CHAR\nInvalid data type' +
+                     ' Expected FLOAT in second parameter.')
+
+        value = int(symb.value)
+        symbol = Symbol(DataTypes.INT, value)
+        program.dataStack.append(symbol)
 
 
 OPCODE_TO_CLASS_MAP = {
@@ -833,5 +887,7 @@ OPCODE_TO_CLASS_MAP = {
     "INT2CHARS": Int2Chars,
     "STRI2INTS": Stri2Ints,
     "JUMPIFNEQS": Jumpifneqs,
-    "JUMPIFEQS": Jumpifeqs
+    "JUMPIFEQS": Jumpifeqs,
+    "INT2FLOATS": Int2Floats,
+    "FLOAT2INTS": Float2Ints
 }

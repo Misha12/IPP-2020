@@ -6,3 +6,12 @@ int-stati:
 	@echo
 	@echo
 	@cat interpret/data/stats.txt
+
+nati-tests-int:
+	php test/test.php --int-script=interpret/interpret.py --int-only --recursive --debug --directory=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/interpret-only/ > test-int-nati.html
+
+koule-pol:
+	python3.8 interpret/interpret.py --source=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/koule/pol/koule_pol.xml --stats=koule_pol_stats.stats --insts --vars 
+
+koule-pol-no-stats:
+	python3.8 interpret/interpret.py --source=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/koule/pol/koule_pol.xml

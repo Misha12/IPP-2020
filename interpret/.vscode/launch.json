@@ -11,8 +11,8 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=${workspaceFolder}/../test/tests/int-only/stack_calc/kalkulacka_STACK_rozsireni.src",
-                "--input=${workspaceFolder}/../test/tests/int-only/stack_calc/kalkulacka_STACK_rozsireni.in"
+                "--source=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\interpret-only\\stack_tests\\stack_jumpifeqs_differenttype_nil.src",
+                "--input=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\interpret-only\\stack_tests\\stack_jumpifeqs_differenttype_nil.in"
             ]
         },
         {
