@@ -77,7 +77,7 @@ class InstructionsParser():
         instruction = instructions.OPCODE_TO_CLASS_MAP[opcode](args, opcode)
 
         for i in range(0, len(args)):
-            expected = instruction.expectedArgTypes[i]
+            expected = instruction.expected_args[i]
             real = args[i].arg_type
 
             is_invalid = False

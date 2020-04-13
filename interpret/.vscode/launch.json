@@ -11,8 +11,7 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\interpret-only\\stack_tests\\stack_jumpifeqs_differenttype_nil.src",
-                "--input=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\interpret-only\\stack_tests\\stack_jumpifeqs_differenttype_nil.in"
+                "--source=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\koule\\pol\\koule_pol.xml"
             ]
         },
         {

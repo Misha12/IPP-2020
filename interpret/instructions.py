@@ -1,5 +1,5 @@
 from typing import List
-from enums import ArgumentTypes, exitCodes, Frames, DataTypes
+from enums import ArgumentTypes, exitCodes, DataTypes
 from helper import exit_app, validate_math_symbols, validate_comparable_symbols
 from program import Program
 from models import InstructionArgument, Symbol, Label as LabelModel
@@ -7,10 +7,10 @@ from sys import stdin, stderr
 
 
 class InstructionBase():
-    expectedArgTypes = []
+    expected_args = []
 
     def __init__(self, args: List[InstructionArgument], opcode: str):
-        if len(self.expectedArgTypes) != len(args):
+        if len(self.expected_args) != len(args):
             exit_app(exitCodes.INVALID_XML_STRUCT,
                      'Invalid count of arguments at opcode {}'.format(opcode),
                      True)
@@ -24,7 +24,7 @@ class InstructionBase():
 
 # 6.4.1 Prace s ramci, volani funkci
 class Move(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('MOVE', self.args[1], False)
@@ -43,21 +43,21 @@ class Pushframe(InstructionBase):
                      'PUSHFRAME\nInvalid access to undefined temporary frame.',
                      True)
 
-        program.LFStack.append(program.TF)
+        program.LF_Stack.append(program.TF)
         program.TF = None
 
 
 class Popframe(InstructionBase):
     def execute(self, program: Program):
-        if len(program.LFStack) == 0:
+        if len(program.LF_Stack) == 0:
             exit_app(exitCodes.INVALID_FRAME,
                      'POPFRAME\nNo available local frame.', True)
 
-        program.TF = program.LFStack.pop()
+        program.TF = program.LF_Stack.pop()
 
 
 class Defvar(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE]
+    expected_args = [ArgumentTypes.VARIABLE]
 
     def execute(self, program: Program):
         arg = self.args[0]
@@ -66,53 +66,43 @@ class Defvar(InstructionBase):
             exit_app(exitCodes.SEMANTIC_ERROR,
                      'DEFVAR\nVariable {} now exists. Cannot redefine.', True)
 
-        if arg.frame == Frames.GLOBAL:
-            program.GF.update({arg.value: None})
-        elif arg.frame == Frames.LOCAL:
-            program.LFStack[-1].update({arg.value: None})
-        elif arg.frame == Frames.TEMPORARY:
-            if program.TF is None:
-                exit_app(exitCodes.INVALID_FRAME,
-                         'DEFVAR\nTemporary frame is not defined.', True)
-
-            program.TF.update({arg.value: None})
+        program.var_set('DEFVAR', arg, None, True)
 
 
 class Return(InstructionBase):
     def execute(self, program: Program):
-        if len(program.callStack) == 0:
+        if len(program.call_stack) == 0:
             exit_app(exitCodes.UNDEFINED_VALUE,
                      'RETURN\nEmpty call stack.', True)
-        program.instruction_pointer = program.callStack.pop()
+        program.instruction_pointer = program.call_stack.pop()
 
 
 # Prace s datovym zasobnikem
 class PushS(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('PUSHS', self.args[0])
-        program.dataStack.append(symb)
+        program.data_stack.append(symb)
 
 
 class PopS(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE]
+    expected_args = [ArgumentTypes.VARIABLE]
 
     def execute(self, program: Program):
-        if len(program.dataStack) == 0:
+        if len(program.data_stack) == 0:
             exit_app(exitCodes.UNDEFINED_VALUE,
                      'POPS\nInstruction {}. Data Stack is empty.'.format(
                          self.opcode), True)
 
-        var = self.args[0]
-        program.var_set('POPS', var, program.dataStack.pop())
+        program.var_set('POPS', self.args[0], program.pop_stack(1)[0])
 
 
 # 6.4.3 Aritmeticke, relacni, booleovske a konverzni instrukce
 class MathInstructionBase(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL,
-                        ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL,
+                     ArgumentTypes.SYMBOL]
 
     def compute(self, symb1: Symbol, symb2: Symbol):
         raise NotImplementedError
@@ -128,7 +118,7 @@ class MathInstructionBase(InstructionBase):
 
 
 class StackMathInstructionBase(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def compute(self, symb1: Symbol, symb2: Symbol):
         raise NotImplementedError
@@ -139,7 +129,7 @@ class StackMathInstructionBase(InstructionBase):
         validate_math_symbols(self.opcode, symbols[1], symbols[0])
 
         result = self.compute(symbols[1], symbols[0])
-        program.dataStack.append(result)
+        program.data_stack.append(result)
 
 
 class Add(MathInstructionBase):
@@ -167,9 +157,9 @@ class IDiv(MathInstructionBase):
 
 
 class ComparableInstruction(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL,
-                        ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL,
+                     ArgumentTypes.SYMBOL]
 
     allowedTypes = [DataTypes.INT, DataTypes.BOOL,
                     DataTypes.STRING, DataTypes.FLOAT]
@@ -189,7 +179,7 @@ class ComparableInstruction(InstructionBase):
 
 
 class StackComparableInstruction(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     allowedTypes = [DataTypes.INT, DataTypes.BOOL,
                     DataTypes.STRING, DataTypes.FLOAT]
@@ -204,7 +194,7 @@ class StackComparableInstruction(InstructionBase):
                                     symbols[0], self.allowedTypes)
 
         result = Symbol(DataTypes.BOOL, self.compare(symbols[1], symbols[0]))
-        program.dataStack.append(result)
+        program.data_stack.append(result)
 
 
 class Lt(ComparableInstruction):
@@ -222,12 +212,7 @@ class Eq(ComparableInstruction):
                     DataTypes.STRING, DataTypes.NIL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
-        if symb1.data_type == DataTypes.NIL:
-            return symb2.data_type == DataTypes.NIL
-        elif symb2.data_type == DataTypes.NIL:
-            return False
-
-        return symb1.value == symb2.value
+        return symb1.equals(symb2)
 
 
 class And(ComparableInstruction):
@@ -245,12 +230,12 @@ class Or(ComparableInstruction):
 
 
 class Not(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('NOT', self.args[1])
 
-        if symb.data_type != DataTypes.BOOL:
+        if not symb.is_bool():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'NOT\nInvalid data type. Expected: bool. Have: ({})'
                      .format(symb.data_type.value), True)
@@ -260,13 +245,13 @@ class Not(InstructionBase):
 
 
 class Int2Char(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         var = self.args[0]
         symb = program.get_symb('INT2CHAR', self.args[1])
 
-        if symb.data_type != DataTypes.INT:
+        if not symb.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHARS\nInvalid data type. Expected: int', True)
 
@@ -280,15 +265,14 @@ class Int2Char(InstructionBase):
 
 
 class Stri2Int(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         string = program.get_symb('STRI2INT', self.args[1])
         index = program.get_symb('STRI2INT', self.args[2])
 
-        if string.data_type != DataTypes.STRING or\
-                index.data_type != DataTypes.INT:
+        if not string.is_string() or index.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'STRI2INT\nInvalid data type. Expected: string and int.' +
                      ' Have: {} and {}'.format(string.data_type.value,
@@ -305,7 +289,7 @@ class Stri2Int(InstructionBase):
 
 # 6.4.4 Vstupne-vystupni instrukce
 class Read(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.TYPE]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.TYPE]
 
     def execute(self, program: Program):
         try:
@@ -353,19 +337,16 @@ class Read(InstructionBase):
 
 
 class Write(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('WRITE', self.args[0])
 
-        if symb.data_type == DataTypes.NIL:
+        if symb.is_nil():
             print('', end='')
-        elif symb.data_type == DataTypes.BOOL:
-            if symb.value:
-                print('true', end='')
-            else:
-                print('false', end='')
-        elif symb.data_type == DataTypes.FLOAT:
+        elif symb.is_bool():
+            print(str(symb.value).lower(), end='')
+        elif symb.is_float():
             print(symb.value.hex(), end='')
         else:
             print(symb.value, end='')
@@ -373,19 +354,19 @@ class Write(InstructionBase):
 
 # 6.4.5 Prace s retezci
 class Concat(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb1 = program.get_symb('CONCAT', self.args[1])
 
-        if symb1.data_type != DataTypes.STRING:
+        if not symb1.is_string():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'CONCAT\nInvalid type at second operand.', True)
 
         symb2 = program.get_symb('CONCAT', self.args[2])
 
-        if symb2.data_type != DataTypes.STRING:
+        if not symb2.is_string():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'CONCAT\nInvalid type at third operand.', True)
 
@@ -394,12 +375,12 @@ class Concat(InstructionBase):
 
 
 class Strlen(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         string = program.get_symb('STRLEN', self.args[1])
 
-        if string.data_type != DataTypes.STRING:
+        if not string.is_string():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'STRLEN\nExpected string', True)
 
@@ -408,15 +389,14 @@ class Strlen(InstructionBase):
 
 
 class Getchar(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         string = program.get_symb('GETCHAR', self.args[1])
         index = program.get_symb('GETCHAR', self.args[2])
 
-        if string.data_type != DataTypes.STRING or\
-                index.data_type != DataTypes.INT:
+        if not string.is_string() or not index.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'GETCHAR\nExpected string and int', True)
 
@@ -429,17 +409,16 @@ class Getchar(InstructionBase):
 
 
 class Setchar(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         variable = program.var_get('SETCHAR', self.args[0])
         index = program.get_symb('SETCHAR', self.args[1])
         toModify = program.get_symb('SETCHAR', self.args[2])
 
-        if index.data_type != DataTypes.INT or\
-                variable.data_type != DataTypes.STRING or\
-                toModify.data_type != DataTypes.STRING:
+        if not index.is_int() or not variable.is_string() or\
+                not toModify.is_string():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'SETCHAR\nExpected: string variable, int, string', True)
 
@@ -460,7 +439,7 @@ class Setchar(InstructionBase):
 
 # 6.4.6 Prace s typy
 class Type(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('TYPE', self.args[1], False)
@@ -474,7 +453,7 @@ class Type(InstructionBase):
 
 # 6.4.7 Instrukce pro rizeni toku programu
 class Label(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.LABEL]
+    expected_args = [ArgumentTypes.LABEL]
 
     def __init__(self, args: List, opcode: str):
         InstructionBase.__init__(self, args, opcode)
@@ -482,7 +461,7 @@ class Label(InstructionBase):
 
 
 class Jump(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.LABEL]
+    expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
         label: LabelModel = self.args[0]
@@ -495,24 +474,21 @@ class Jump(InstructionBase):
 
 class Call(Jump):
     def execute(self, program: Program):
-        program.callStack.append(program.instruction_pointer)
+        program.call_stack.append(program.instruction_pointer)
         Jump.execute(self, program)
 
 
 class Jumpifeq(Jump):
-    expectedArgTypes = [ArgumentTypes.LABEL,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.LABEL,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb1 = program.get_symb('JUMPIFEQ', self.args[1])
         symb2 = program.get_symb('JUMPIFEQ', self.args[2])
 
-        if symb2.data_type == symb1.data_type or\
-                symb1.data_type == DataTypes.NIL or\
-                symb2.data_type == DataTypes.NIL:
-            if symb2.value == symb1.value or\
-                    symb2.data_type == DataTypes.NIL or\
-                    symb1.data_type == DataTypes.NIL:
+        if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
+                symb2.is_nil():
+            if symb2.equals_value(symb1) or symb2.is_nil() or symb1.is_nil():
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -520,19 +496,17 @@ class Jumpifeq(Jump):
 
 
 class Jumpifneq(Jump):
-    expectedArgTypes = [ArgumentTypes.LABEL,
-                        ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.LABEL,
+                     ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb1 = program.get_symb('JUMPNIFEQ', self.args[1])
         symb2 = program.get_symb('JUMPNIFEQ', self.args[2])
 
-        if symb2.data_type == symb1.data_type or\
-                symb1.data_type == DataTypes.NIL or\
-                symb2.data_type == DataTypes.NIL:
-            if symb2.value != symb1.value or\
-                    symb2.data_type == DataTypes.NIL or\
-                    symb1.data_type == DataTypes.NIL:
+        if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
+                symb2.is_nil():
+            if not symb2.equals_value(symb1) or symb2.is_nil() or\
+                    symb1.is_nil():
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -540,12 +514,12 @@ class Jumpifneq(Jump):
 
 
 class Exit(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('EXIT', self.args[0], True)
 
-        if symb.data_type != DataTypes.INT:
+        if not symb.is_int():
             exit_app(exitCodes.INVALID_OPERAND_VALUE,
                      'EXIT\nInvalid exit code', True)
         elif symb.value < 0 or symb.value > 49:
@@ -558,7 +532,7 @@ class Exit(InstructionBase):
 
 # 6.4.8 Ladici instrukce
 class DPrint(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('DPRINT', self.args[0])
@@ -572,34 +546,32 @@ class Break(InstructionBase):
 
 # Rozsireni FLOAT
 class Int2Float(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('INT2FLOAT', self.args[1])
 
-        if symb.data_type != DataTypes.INT:
+        if not symb.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHAR\nInvalid data type' +
                      ' Expected INT in second parameter.')
 
-        value = float(symb.value)
-        symbol = Symbol(DataTypes.FLOAT, value)
+        symbol = Symbol(DataTypes.FLOAT, float(symb.value))
         program.var_set('INT2FLOAT', self.args[0], symbol)
 
 
 class Float2Int(InstructionBase):
-    expectedArgTypes = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
+    expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
         symb = program.get_symb('FLOAT2INT', self.args[1])
 
-        if symb.data_type != DataTypes.FLOAT:
+        if not symb.is_float():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHAR\nInvalid data type' +
                      ' Expected FLOAT in second parameter.')
 
-        value = int(symb.value)
-        symbol = Symbol(DataTypes.INT, value)
+        symbol = Symbol(DataTypes.INT, int(symb.value))
         program.var_set('FLOAT2INT', self.args[0], symbol)
 
 
@@ -614,10 +586,10 @@ class Div(MathInstructionBase):
 
 # Rozsireni STACK
 class Clears(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
-        program.dataStack = list()
+        program.data_stack = list()
 
 
 class Adds(StackMathInstructionBase):
@@ -661,12 +633,7 @@ class Eqs(StackComparableInstruction):
                     DataTypes.STRING, DataTypes.NIL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
-        if symb1.data_type == DataTypes.NIL:
-            return symb2.data_type == DataTypes.NIL
-        elif symb2.data_type == DataTypes.NIL:
-            return False
-
-        return symb1.value == symb2.value
+        return symb1.equals(symb2)
 
 
 class Ands(StackComparableInstruction):
@@ -684,27 +651,27 @@ class Ors(StackComparableInstruction):
 
 
 class Nots(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
         symb = program.pop_stack(1)[0]
 
-        if symb.data_type != DataTypes.BOOL:
+        if not symb.is_bool():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'NOT\nInvalid data type. Expected: bool. Have: ({})'
                      .format(symb.data_type.value), True)
 
         result = Symbol(DataTypes.BOOL, not symb.value)
-        program.dataStack.append(result)
+        program.data_stack.append(result)
 
 
 class Int2Chars(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
         symb = program.pop_stack(1)[0]
 
-        if symb.data_type != DataTypes.INT:
+        if not symb.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHARS\nInvalid data type. Expected: int', True)
 
@@ -715,19 +682,18 @@ class Int2Chars(InstructionBase):
                      'INT2CHARS\nInvalid int to char conversion value. {}'
                      .format(symb.value))
         else:
-            program.dataStack.append(Symbol(DataTypes.STRING, char))
+            program.data_stack.append(Symbol(DataTypes.STRING, char))
 
 
 class Stri2Ints(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
         symbols = program.pop_stack(2)
         index = symbols[0]
         string = symbols[1]
 
-        if string.data_type != DataTypes.STRING or\
-                index.data_type != DataTypes.INT:
+        if not string.is_string() or not index.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'STRI2INTS\nInvalid data type. Expected: string and int.'
                      + ' Have: {} and {}'.format(string.data_type.value,
@@ -739,11 +705,11 @@ class Stri2Ints(InstructionBase):
             exit_app(exitCodes.INVALID_STRING_OPERATION,
                      'String is out of range.', True)
         else:
-            program.dataStack.append(Symbol(DataTypes.INT, ordinary))
+            program.data_stack.append(Symbol(DataTypes.INT, ordinary))
 
 
 class Jumpifeqs(Jump):
-    expectedArgTypes = [ArgumentTypes.LABEL]
+    expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
         symbols = program.pop_stack(2)
@@ -751,10 +717,9 @@ class Jumpifeqs(Jump):
         symb2 = symbols[0]
         symb1 = symbols[1]
 
-        if symb2.data_type == symb1.data_type or\
-                symb1.data_type == DataTypes.NIL or\
-                symb2.data_type == DataTypes.NIL:
-            if symb2.value == symb1.value:
+        if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
+                symb2.is_nil():
+            if symb2.equals_value(symb1):
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -762,7 +727,7 @@ class Jumpifeqs(Jump):
 
 
 class Jumpifneqs(Jump):
-    expectedArgTypes = [ArgumentTypes.LABEL]
+    expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
         symbols = program.pop_stack(2)
@@ -770,12 +735,9 @@ class Jumpifneqs(Jump):
         symb2 = symbols[0]
         symb1 = symbols[1]
 
-        if symb2.data_type == symb1.data_type or\
-                symb1.data_type == DataTypes.NIL or\
-                symb2.data_type == DataTypes.NIL:
-            if symb2.value != symb1.value or\
-                    symb2.data_type == DataTypes.NIL or\
-                    symb1.data_type == DataTypes.NIL:
+        if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
+                symb2.is_nil():
+            if not symb2.equals_value(symb1):
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -783,35 +745,33 @@ class Jumpifneqs(Jump):
 
 
 class Int2Floats(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
         symb = program.pop_stack(1)[0]
 
-        if symb.data_type != DataTypes.INT:
+        if not symb.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHAR\nInvalid data type' +
                      ' Expected INT in second parameter.')
 
-        value = float(symb.value)
-        symbol = Symbol(DataTypes.FLOAT, value)
-        program.dataStack.append(symbol)
+        symbol = Symbol(DataTypes.FLOAT, float(symb.value))
+        program.data_stack.append(symbol)
 
 
 class Float2Ints(InstructionBase):
-    expectedArgTypes = []
+    expected_args = []
 
     def execute(self, program: Program):
         symb = program.pop_stack(1)[0]
 
-        if symb.data_type != DataTypes.FLOAT:
+        if not symb.is_float():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'INT2CHAR\nInvalid data type' +
                      ' Expected FLOAT in second parameter.')
 
-        value = int(symb.value)
-        symbol = Symbol(DataTypes.INT, value)
-        program.dataStack.append(symbol)
+        symbol = Symbol(DataTypes.INT, int(symb.value))
+        program.data_stack.append(symbol)
 
 
 OPCODE_TO_CLASS_MAP = {
