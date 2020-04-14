@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=D:\\Google\\Drive\\School\\IPP\\testy\\both\\setchar\\setchar_unset1.out_tmp"
+                "--source=d:\\Google\\Drive\\School\\IPP\\projekt\\final_tests\\int-only-no-ext\\test_jumpifneq_differenttype_nil.src"
             ]
         },
         {
