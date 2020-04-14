@@ -7,6 +7,8 @@ from sys import stdin, stderr
 
 
 class InstructionBase():
+    """ Bazova trida pro kazdou instrukci. """
+
     expected_args = []
 
     def __init__(self, args: List[InstructionArgument], opcode: str):
@@ -24,6 +26,8 @@ class InstructionBase():
 
 # 6.4.1 Prace s ramci, volani funkci
 class Move(InstructionBase):
+    """ Vlozeni konstanty do promenne. """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -32,11 +36,15 @@ class Move(InstructionBase):
 
 
 class Createframe(InstructionBase):
+    """ Vytvoreni noveho docastneho ramce """
+
     def execute(self, program: Program):
         program.TF = dict()
 
 
 class Pushframe(InstructionBase):
+    """ Presun docasneho ramce na vrchol zasobniku ramcu. """
+
     def execute(self, program: Program):
         if program.TF is None:
             exit_app(exitCodes.INVALID_FRAME,
@@ -48,6 +56,8 @@ class Pushframe(InstructionBase):
 
 
 class Popframe(InstructionBase):
+    """ Presun ramce z vrcholu zasoniku ramcu do lokalniho ramce. """
+
     def execute(self, program: Program):
         if len(program.LF_Stack) == 0:
             exit_app(exitCodes.INVALID_FRAME,
@@ -57,6 +67,8 @@ class Popframe(InstructionBase):
 
 
 class Defvar(InstructionBase):
+    """ Definice promenne. """
+
     expected_args = [ArgumentTypes.VARIABLE]
 
     def execute(self, program: Program):
@@ -70,6 +82,8 @@ class Defvar(InstructionBase):
 
 
 class Return(InstructionBase):
+    """ Instrukce pro skok na pozici definovanou na vrcholu zasobniku volani """
+
     def execute(self, program: Program):
         if len(program.call_stack) == 0:
             exit_app(exitCodes.UNDEFINED_VALUE,
@@ -79,6 +93,8 @@ class Return(InstructionBase):
 
 # Prace s datovym zasobnikem
 class PushS(InstructionBase):
+    """ Ulozeni hodnoty (nebo obsahu promenne) na vrchol datoveho zasobniku. """
+
     expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -87,6 +103,8 @@ class PushS(InstructionBase):
 
 
 class PopS(InstructionBase):
+    """ Ziskani hodnoty z vrcholu datoveho zasobniku a ulozeni do promenne """
+
     expected_args = [ArgumentTypes.VARIABLE]
 
     def execute(self, program: Program):
@@ -100,6 +118,11 @@ class PopS(InstructionBase):
 
 # 6.4.3 Aritmeticke, relacni, booleovske a konverzni instrukce
 class MathInstructionBase(InstructionBase):
+    """
+    Bazova trida pro vsechny matematicke instrukce.
+    Zakladni verze pouzivajici operandy.
+    """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL,
                      ArgumentTypes.SYMBOL]
@@ -118,6 +141,11 @@ class MathInstructionBase(InstructionBase):
 
 
 class StackMathInstructionBase(InstructionBase):
+    """
+    Bazova trida pro vsechny matematicke instrukce.
+    Rozsirena verze pouzivajici zasobnik.
+    """
+
     expected_args = []
 
     def compute(self, symb1: Symbol, symb2: Symbol):
@@ -133,21 +161,29 @@ class StackMathInstructionBase(InstructionBase):
 
 
 class Add(MathInstructionBase):
+    """ Scitani (Zakladni varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value + symb2.value)
 
 
 class Sub(MathInstructionBase):
+    """ Odcitani (Zakldani varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value - symb2.value)
 
 
 class Mul(MathInstructionBase):
+    """ Nasobeni (Zakladni varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value * symb2.value)
 
 
 class IDiv(MathInstructionBase):
+    """ Celociselne deleni (Zakladani varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         if symb2.value == 0:
             exit_app(exitCodes.INVALID_OPERAND_VALUE,
@@ -157,6 +193,11 @@ class IDiv(MathInstructionBase):
 
 
 class ComparableInstruction(InstructionBase):
+    """
+    Bazova trida pro porovnavaci instrukce.
+    Zakladni verze pozivajici operandy.
+    """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL,
                      ArgumentTypes.SYMBOL]
@@ -179,6 +220,11 @@ class ComparableInstruction(InstructionBase):
 
 
 class StackComparableInstruction(InstructionBase):
+    """
+    Bazova trida pro porovnavaci instrukce.
+    Rozsirena verze pouzivajici zasobnik.
+    """
+
     expected_args = []
 
     allowedTypes = [DataTypes.INT, DataTypes.BOOL,
@@ -198,16 +244,22 @@ class StackComparableInstruction(InstructionBase):
 
 
 class Lt(ComparableInstruction):
+    """ Mensi (<) """
+
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value < symb2.value
 
 
 class Gt(ComparableInstruction):
+    """ Vetsi (>) """
+
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value > symb2.value
 
 
 class Eq(ComparableInstruction):
+    """ Rovno (==) """
+
     allowedTypes = [DataTypes.INT, DataTypes.BOOL,
                     DataTypes.STRING, DataTypes.NIL]
 
@@ -216,6 +268,8 @@ class Eq(ComparableInstruction):
 
 
 class And(ComparableInstruction):
+    """ A (&&) """
+
     allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
@@ -223,6 +277,8 @@ class And(ComparableInstruction):
 
 
 class Or(ComparableInstruction):
+    """ Nebo (||) """
+
     allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
@@ -230,6 +286,8 @@ class Or(ComparableInstruction):
 
 
 class Not(InstructionBase):
+    """ Negace (!) """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -245,6 +303,8 @@ class Not(InstructionBase):
 
 
 class Int2Char(InstructionBase):
+    """ Převod čísla na znak. """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -265,6 +325,8 @@ class Int2Char(InstructionBase):
 
 
 class Stri2Int(InstructionBase):
+    """ Prevod znaku na urcite pozici na cislo """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -289,6 +351,11 @@ class Stri2Int(InstructionBase):
 
 # 6.4.4 Vstupne-vystupni instrukce
 class Read(InstructionBase):
+    """
+    Cteni dat ze standardniho vstupu, nebo ze souboru, ktery byl zadan
+    pomoci parametru --input
+    """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.TYPE]
 
     def execute(self, program: Program):
@@ -337,6 +404,8 @@ class Read(InstructionBase):
 
 
 class Write(InstructionBase):
+    """ Instrukce pro vypis symbolu na standardni vystup. """
+
     expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -354,6 +423,8 @@ class Write(InstructionBase):
 
 # 6.4.5 Prace s retezci
 class Concat(InstructionBase):
+    """ Konkatenace dvou retezcu. """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -375,6 +446,8 @@ class Concat(InstructionBase):
 
 
 class Strlen(InstructionBase):
+    """ Zjisteni delky retezce. """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -389,6 +462,8 @@ class Strlen(InstructionBase):
 
 
 class Getchar(InstructionBase):
+    """ Ziskani znaku z retezce na urcite pozici """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -409,6 +484,8 @@ class Getchar(InstructionBase):
 
 
 class Setchar(InstructionBase):
+    """ Uprava znaku na urcite pozici """
+
     expected_args = [ArgumentTypes.VARIABLE,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -443,6 +520,8 @@ class Setchar(InstructionBase):
 
 # 6.4.6 Prace s typy
 class Type(InstructionBase):
+    """ Zjisteni datoveho typu. """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -457,6 +536,8 @@ class Type(InstructionBase):
 
 # 6.4.7 Instrukce pro rizeni toku programu
 class Label(InstructionBase):
+    """ Navesti """
+
     expected_args = [ArgumentTypes.LABEL]
 
     def __init__(self, args: List, opcode: str):
@@ -465,6 +546,8 @@ class Label(InstructionBase):
 
 
 class Jump(InstructionBase):
+    """ Skok na návěští. """
+
     expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
@@ -477,12 +560,16 @@ class Jump(InstructionBase):
 
 
 class Call(Jump):
+    """ Uložení aktuální pozice do zásobníku volání a skok na návěští """
+
     def execute(self, program: Program):
         program.call_stack.append(program.instruction_pointer)
         Jump.execute(self, program)
 
 
 class Jumpifeq(Jump):
+    """ Skok na návěští, pokud budou 2 hodnoty stejné. """
+
     expected_args = [ArgumentTypes.LABEL,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -500,6 +587,8 @@ class Jumpifeq(Jump):
 
 
 class Jumpifneq(Jump):
+    """ Skok na návěští, pokud 2 hodnoty nebudou stejné """
+
     expected_args = [ArgumentTypes.LABEL,
                      ArgumentTypes.SYMBOL, ArgumentTypes.SYMBOL]
 
@@ -518,6 +607,8 @@ class Jumpifneq(Jump):
 
 
 class Exit(InstructionBase):
+    """ Předčasné ukončení programu s návratovým kódem. """
+
     expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -536,6 +627,8 @@ class Exit(InstructionBase):
 
 # 6.4.8 Ladici instrukce
 class DPrint(InstructionBase):
+    """ Vypis symbolu na standardni chybovy vystup. """
+
     expected_args = [ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -544,12 +637,16 @@ class DPrint(InstructionBase):
 
 
 class Break(InstructionBase):
+    """ Vypis aktualniho stavu programu. """
+
     def execute(self, program: Program):
         print(program.get_state(), file=stderr)
 
 
 # Rozsireni FLOAT
 class Int2Float(InstructionBase):
+    """ Prevod celociselne hodnoty na cislo s plovouci desetinnou carkou """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -565,6 +662,8 @@ class Int2Float(InstructionBase):
 
 
 class Float2Int(InstructionBase):
+    """ Prevod cisla s desetinnou carkou na cele cislo. """
+
     expected_args = [ArgumentTypes.VARIABLE, ArgumentTypes.SYMBOL]
 
     def execute(self, program: Program):
@@ -580,6 +679,8 @@ class Float2Int(InstructionBase):
 
 
 class Div(MathInstructionBase):
+    """ Deleni s plovouci desetinnou carkou. """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         if symb2.value == 0.0:
             exit_app(exitCodes.INVALID_OPERAND_VALUE,
@@ -590,6 +691,8 @@ class Div(MathInstructionBase):
 
 # Rozsireni STACK
 class Clears(InstructionBase):
+    """ Smazani vsech dat v datovem zasobniku """
+
     expected_args = []
 
     def execute(self, program: Program):
@@ -597,42 +700,58 @@ class Clears(InstructionBase):
 
 
 class Adds(StackMathInstructionBase):
+    """ Scitani (Zasobnikova varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value + symb2.value)
 
 
 class Subs(StackMathInstructionBase):
+    """ Odcitani (Zasobnikova varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value - symb2.value)
 
 
 class Muls(StackMathInstructionBase):
+    """ Nasobeni (Zasobnikova varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value * symb2.value)
 
 
 class IDivs(StackMathInstructionBase):
+    """ Celociselne deleni (Zasobnikova varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value // symb2.value)
 
 
 # FLOAT + STACK
 class Divs(StackMathInstructionBase):
+    """ Deleni s plovouci desetinnou carkou (Zasobnikova varianta) """
+
     def compute(self, symb1: Symbol, symb2: Symbol):
         return Symbol(symb1.data_type, symb1.value / symb2.value)
 
 
 class Lts(StackComparableInstruction):
+    """ Mensi (<) (Zasobnikova varianta) """
+
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value < symb2.value
 
 
 class Gts(StackComparableInstruction):
+    """ Vetsi (>) (Zasobnikova varianta) """
+
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
         return symb1.value > symb2.value
 
 
 class Eqs(StackComparableInstruction):
+    """ Rovno (==) (Zasobnikova varianta) """
+
     allowedTypes = [DataTypes.INT, DataTypes.BOOL,
                     DataTypes.STRING, DataTypes.NIL]
 
@@ -641,6 +760,8 @@ class Eqs(StackComparableInstruction):
 
 
 class Ands(StackComparableInstruction):
+    """ A (&&) (Zasobnikova varianta) """
+
     allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
@@ -648,6 +769,8 @@ class Ands(StackComparableInstruction):
 
 
 class Ors(StackComparableInstruction):
+    """ Nebo (||) (Zasobnikova varianta) """
+
     allowedTypes = [DataTypes.BOOL]
 
     def compare(self, symb1: Symbol, symb2: Symbol) -> bool:
@@ -655,6 +778,8 @@ class Ors(StackComparableInstruction):
 
 
 class Nots(InstructionBase):
+    """ Negace (!) (Zasobnikova varianta) """
+
     expected_args = []
 
     def execute(self, program: Program):
@@ -670,6 +795,8 @@ class Nots(InstructionBase):
 
 
 class Int2Chars(InstructionBase):
+    """ Převod čísla na znak. (Zasobnikova varianta) """
+
     expected_args = []
 
     def execute(self, program: Program):
@@ -690,6 +817,8 @@ class Int2Chars(InstructionBase):
 
 
 class Stri2Ints(InstructionBase):
+    """ Prevod znaku na urcite pozici na cislo (Zasobnikova varianta) """
+
     expected_args = []
 
     def execute(self, program: Program):
@@ -713,6 +842,8 @@ class Stri2Ints(InstructionBase):
 
 
 class Jumpifeqs(Jump):
+    """ Skok na návěští, pokud budou 2 hodnoty stejné. (Zasobnikova varianta) """
+
     expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
@@ -731,6 +862,8 @@ class Jumpifeqs(Jump):
 
 
 class Jumpifneqs(Jump):
+    """ Skok na návěští, pokud nebudou 2 hodnoty stejné. (Zasobnikova varianta) """
+
     expected_args = [ArgumentTypes.LABEL]
 
     def execute(self, program: Program):
@@ -749,6 +882,8 @@ class Jumpifneqs(Jump):
 
 
 class Int2Floats(InstructionBase):
+    """ Prevod celociselne hodnoty na cislo s plovouci desetinnou carkou. (Zasobnikova varianta) """
+
     expected_args = []
 
     def execute(self, program: Program):
@@ -764,6 +899,8 @@ class Int2Floats(InstructionBase):
 
 
 class Float2Ints(InstructionBase):
+    """ Prevod cisla s desetinnou carkou na cele cislo. (Zasobnikova varianta) """
+
     expected_args = []
 
     def execute(self, program: Program):

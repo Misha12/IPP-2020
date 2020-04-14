@@ -24,19 +24,19 @@ class TestResult
      */
     public function isOk()
     {
-        if ($this->parseResult != null) {
-            if ($this->parseResult->expectedExitCode < 30 && $this->parseResult->expectedExitCode != $this->parseResult->realExitCode)
-                return false;
-
-            if ($this->parseResult->diffState != 'not_tested' && $this->parseResult->diffState != 'ok')
-                return false;
-        }
-
         if ($this->intResult != null) {
             if ($this->intResult->expectedExitCode != $this->intResult->realExitCode)
                 return false;
 
             if ($this->intResult->diffState != 'not_tested' && $this->intResult->diffState != 'ok')
+                return false;
+        }
+
+        if ($this->parseResult != null) {
+            if ($this->parseResult->expectedExitCode < 30 && $this->parseResult->expectedExitCode != $this->parseResult->realExitCode)
+                return false;
+
+            if ($this->parseResult->diffState != 'not_tested' && $this->parseResult->diffState != 'ok')
                 return false;
         }
 
@@ -50,11 +50,11 @@ class TestResult
      */
     public function getMessage()
     {
+        if ($this->intResult != null)
+        return $this->intResult->getMessage();
+
         if ($this->parseResult != null)
             return $this->parseResult->getMessage();
-
-        if ($this->intResult != null)
-            return $this->intResult->getMessage();
 
         return null;
     }
@@ -129,7 +129,7 @@ class TestPartResult
             if (!$isOk)
                 $this->stdout = file_get_contents($this->stdoutFile);
 
-            @unlink($this->stdoutFile);
+            //@unlink($this->stdoutFile);
         }
 
         if (file_exists($this->stderrFile)) {
@@ -321,7 +321,7 @@ class TestItem
         $result->stdoutFile = "$fullPath.out_tmp";
         $result->stderrFile = "$fullPath.err_tmp";
 
-        $phpExecutablePath = "php \"" . $config->parseScript . "\" < \"$fullPath.src\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
+        $phpExecutablePath = "php7.4 \"" . $config->parseScript . "\" < \"$fullPath.src\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
         exec($phpExecutablePath, $output, $retCode);
 
         $result->realExitCode = $retCode;
