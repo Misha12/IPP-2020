@@ -66,4 +66,4 @@ if stats is not None:
     stats.save()
     stats_file.close()
 
-exit(program.exit_code)
+exit(int(program.exit_code))

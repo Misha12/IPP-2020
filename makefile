@@ -2,6 +2,8 @@ KOULE_PATH=test/tests/koule_pol.xml
 KOULE_STATS_DIR=data/koule_pol_stats.stats
 NATI_TESTS=../testy/interpret-only/
 NATI_HTML=data/nati_int-tests.html
+NATI_TESTS_BOTH=../testy/both/
+NATI_HTML_BOTH=data/nati_both-tests.html
 
 int-only:
 	php test/test.php --int-script=interpret/interpret.py --directory=test/tests/int-only --recursive --int-only --debug > test-int.html
@@ -20,3 +22,6 @@ koule-pol:
 
 koule-pol-no-stats:
 	python3.8 interpret/interpret.py --source=$(KOULE_PATH)
+
+nati-tests-both:
+	php test/test.php --int-script=interpret/interpret.py --parse-script=test/apps/parse.php --recursive --debug --directory=$(NATI_TESTS_BOTH) > $(NATI_HTML_BOTH)

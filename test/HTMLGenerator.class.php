@@ -1,6 +1,4 @@
 <?php
-if (!isset($APP_CONSTS)) include 'Consts.class.php';
-
 $HTML_GENERATOR = 1;
 
 /**

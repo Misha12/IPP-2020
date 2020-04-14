@@ -272,7 +272,7 @@ class Stri2Int(InstructionBase):
         string = program.get_symb('STRI2INT', self.args[1])
         index = program.get_symb('STRI2INT', self.args[2])
 
-        if not string.is_string() or index.is_int():
+        if string is None or not string.is_string() or index is None or not index.is_int():
             exit_app(exitCodes.INVALID_DATA_TYPE,
                      'STRI2INT\nInvalid data type. Expected: string and int.' +
                      ' Have: {} and {}'.format(string.data_type.value,
@@ -417,6 +417,10 @@ class Setchar(InstructionBase):
         index = program.get_symb('SETCHAR', self.args[1])
         toModify = program.get_symb('SETCHAR', self.args[2])
 
+        if variable is None:
+            exit_app(exitCodes.UNDEFINED_VALUE,
+                     'SETCHAR\nUndefined variable.', True)
+
         if not index.is_int() or not variable.is_string() or\
                 not toModify.is_string():
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -520,7 +524,7 @@ class Exit(InstructionBase):
         symb = program.get_symb('EXIT', self.args[0], True)
 
         if not symb.is_int():
-            exit_app(exitCodes.INVALID_OPERAND_VALUE,
+            exit_app(exitCodes.INVALID_DATA_TYPE,
                      'EXIT\nInvalid exit code', True)
         elif symb.value < 0 or symb.value > 49:
             exit_app(exitCodes.INVALID_OPERAND_VALUE,

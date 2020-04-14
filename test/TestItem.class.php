@@ -1,6 +1,4 @@
 <?php
-if (!isset($APP_CONSTS)) include 'Consts.class.php';
-
 $TEST_ITEM = 1;
 
 /**
@@ -26,19 +24,19 @@ class TestResult
      */
     public function isOk()
     {
-        if ($this->parseResult != null) {
-            if ($this->parseResult->expectedExitCode < 30 && $this->parseResult->expectedExitCode != $this->parseResult->realExitCode)
-                return false;
-
-            if ($this->parseResult->diffState != 'not_tested' && $this->parseResult->diffState != 'ok')
-                return false;
-        }
-
         if ($this->intResult != null) {
             if ($this->intResult->expectedExitCode != $this->intResult->realExitCode)
                 return false;
 
             if ($this->intResult->diffState != 'not_tested' && $this->intResult->diffState != 'ok')
+                return false;
+        }
+
+        if ($this->parseResult != null) {
+            if ($this->parseResult->expectedExitCode < 30 && $this->parseResult->expectedExitCode != $this->parseResult->realExitCode)
+                return false;
+
+            if ($this->parseResult->diffState != 'not_tested' && $this->parseResult->diffState != 'ok')
                 return false;
         }
 
@@ -52,11 +50,11 @@ class TestResult
      */
     public function getMessage()
     {
+        if ($this->intResult != null)
+        return $this->intResult->getMessage();
+
         if ($this->parseResult != null)
             return $this->parseResult->getMessage();
-
-        if ($this->intResult != null)
-            return $this->intResult->getMessage();
 
         return null;
     }
@@ -131,7 +129,7 @@ class TestPartResult
             if (!$isOk)
                 $this->stdout = file_get_contents($this->stdoutFile);
 
-            @unlink($this->stdoutFile);
+            //@unlink($this->stdoutFile);
         }
 
         if (file_exists($this->stderrFile)) {
@@ -149,13 +147,8 @@ class TestPartResult
      */
     public function isOk()
     {
-        if ($this->expectedExitCode !== $this->realExitCode)
-            return false;
-
-        if ($this->diffState != 'not_tested' && $this->diffState != 'ok')
-            return false;
-
-        return true;
+        $msg = $this->getMessage();
+        return $msg == null;
     }
 
     /**
@@ -164,13 +157,13 @@ class TestPartResult
      */
     public function getMessage()
     {
-        if ($this->expectedExitCode !== $this->realExitCode) {
+        if ($this->expectedExitCode != $this->realExitCode) {
             return ('Neočekávaný návratový kód: ' . $this->realExitCode . '. Očekáváno: ' . $this->expectedExitCode) . '<br>' .
                 (empty($this->stdout) ? null : '<b>STDOUT:</b> &nbsp;&nbsp;&nbsp;' . htmlspecialchars($this->stdout) . '<br>') .
                 (empty($this->stderr) ? null : '<b>STDERR:</b> &nbsp;&nbsp;&nbsp;' . htmlspecialchars($this->stderr));
         }
 
-        if ($this->diffState === 'different')
+        if ($this->diffState == 'different')
             return 'Rozdílný výstup<br><pre>' . $this->diffResult . "</pre>";
 
         return null;
@@ -287,14 +280,14 @@ class TestItem
 
         $sourceCode = $parseTestResult != null ? $parseTestResult->stdoutFile : "$fullPath.src";
         $dataRedirection = "< \"$fullPath.in\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
-        $pythonExecutablePath = PYTHON_EXECUTABLE . " \"" . $config->intScript . "\" --source=\"$sourceCode\" $dataRedirection";
+        $pythonExecutablePath = "python3.8 \"" . $config->intScript . "\" --source=\"$sourceCode\" $dataRedirection";
         exec($pythonExecutablePath, $output, $retCode);
 
         $result->realExitCode = $retCode;
         if ($result->expectedExitCode != $retCode) return $result;
         if ($retCode != 0) return $result;
 
-        exec(DIFF_EXECUTABLE . " \"$fullPath.out\" \"" . $result->stdoutFile . "\"", $output, $retCode);
+        exec("diff \"$fullPath.out\" \"" . $result->stdoutFile . "\"", $output, $retCode);
         if ($retCode != 0) {
             $result->diffState = 'different';
 
@@ -328,14 +321,14 @@ class TestItem
         $result->stdoutFile = "$fullPath.out_tmp";
         $result->stderrFile = "$fullPath.err_tmp";
 
-        $phpExecutablePath = PHP_EXECUTABLE . " \"" . $config->parseScript . "\" < \"$fullPath.src\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
+        $phpExecutablePath = "php7.4 \"" . $config->parseScript . "\" < \"$fullPath.src\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
         exec($phpExecutablePath, $output, $retCode);
 
         $result->realExitCode = $retCode;
         if ($result->expectedExitCode < 30 && $result->expectedExitCode != $retCode) return $result;
         if (!$config->parseOnly || $retCode != 0) return $result;
 
-        $jexamxmlExecutablePath = JAVA_EXECUTABLE . " " . $config->jexamxml . " \"$fullPath.out\" \"" . $result->stdoutFile . "\" xml_diff.xml /D \"" . $config->jexamxmlConfig . "\"";
+        $jexamxmlExecutablePath = "java -jar \"" . $config->jexamxml . "\" \"$fullPath.out\" \"" . $result->stdoutFile . "\" xml_diff.xml /D \"" . $config->jexamxmlConfig . "\"";
         exec($jexamxmlExecutablePath, $output, $retCode);
         @unlink("xml_diff.xml");
 

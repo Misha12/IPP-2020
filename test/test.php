@@ -1,5 +1,4 @@
 <?php
-if (!isset($APP_CONSTS)) include 'Consts.class.php';
 if (!isset($ARG_PARSE)) include 'ArgumentParser.class.php';
 if (!isset($HELPER)) include 'helper.php';
 if (!isset($TEST_LOADER)) include 'TestLoader.class.php';

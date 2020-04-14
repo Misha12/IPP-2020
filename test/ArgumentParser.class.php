@@ -1,6 +1,5 @@
 <?php
 if (!isset($HELPER)) include 'helper.php';
-if (!isset($APP_CONSTS)) include 'Consts.class.php';
 
 $ARG_PARSE = 1;
 
@@ -19,7 +18,7 @@ class Arguments
      * Cesta k adresari s testy.
      * @var string
      */
-    public $directory = DEFAULT_PATH;
+    public $directory = ".";
 
     /**
      * Priznak rekurzivniho vyhledavani testu.
@@ -31,13 +30,13 @@ class Arguments
      * Cesta k souboru, kde se nachazi analyzator kodu.
      * @var string
      */
-    public $parseScript = DEFAULT_PARSE;
+    public $parseScript = "parse.php";
 
     /**
      * Cesta k souboru, kde se nachazi interpret.py
      * @var string
      */
-    public $intScript = DEFAULT_INT;
+    public $intScript = "interpret.py";
 
     /**
      * Priznak, ze se maji spoustet pouze testy analyzatoru kodu
@@ -55,7 +54,7 @@ class Arguments
      * Cesta k porovnavacimu nastroji XML vystupu.
      * @var string
      */
-    public $jexamxml = DEFAULT_JEXAMXML;
+    public $jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
 
     /**
      * Cesta ke konfiguraci nastroje JEXAMXML.
@@ -73,7 +72,7 @@ class Arguments
 
     public function __construct()
     {
-        $this->jexamxmlConfig = dirname(DEFAULT_JEXAMXML) . "/options";
+        $this->jexamxmlConfig = dirname('/pub/courses/ipp/jexamxml/jexamxml.jar') . "/options";
     }
 
     public function setDirectory($dir)

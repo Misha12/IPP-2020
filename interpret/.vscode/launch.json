@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=c:\\Users\\mhala\\OneDrive\\Vyvoj\\GitHub\\ipp-2020-tests\\koule\\pol\\koule_pol.xml"
+                "--source=D:\\Google\\Drive\\School\\IPP\\testy\\both\\setchar\\setchar_unset1.out_tmp"
             ]
         },
         {
