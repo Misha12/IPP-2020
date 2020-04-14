@@ -1,3 +1,6 @@
+KOULE_PATH=test/tests/koule_pol.xml
+KOULE_STATS_DIR=data/koule_pol_stats.stats
+
 int-only:
 	php test/test.php --int-script=interpret/interpret.py --directory=test/tests/int-only --recursive --int-only --debug > test-int.html
 
@@ -11,7 +14,7 @@ nati-tests-int:
 	php test/test.php --int-script=interpret/interpret.py --int-only --recursive --debug --directory=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/interpret-only/ > test-int-nati.html
 
 koule-pol:
-	python3.8 interpret/interpret.py --source=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/koule/pol/koule_pol.xml --stats=koule_pol_stats.stats --insts --vars 
+	python3.8 interpret/interpret.py --source=$(KOULE_PATH) --stats=$(KOULE_STATS_DIR) --insts --vars 
 
 koule-pol-no-stats:
-	python3.8 interpret/interpret.py --source=/mnt/c/Users/mhala/OneDrive/Vyvoj/GitHub/ipp-2020-tests/koule/pol/koule_pol.xml
+	python3.8 interpret/interpret.py --source=$(KOULE_PATH)
