@@ -142,7 +142,7 @@ class TestPartResult
             if (!$isOk)
                 $this->stdout = file_get_contents($this->stdoutFile);
 
-            @unlink($this->stdoutFile);
+            //@unlink($this->stdoutFile);
         }
 
         if (file_exists($this->stderrFile)) {
@@ -300,7 +300,7 @@ class TestItem
         if ($result->expectedExitCode != $retCode) return $result;
         if ($retCode != 0) return $result;
 
-        exec("diff \"$fullPath.out\" \"" . $result->stdoutFile . "\"", $output, $retCode);
+        exec("diff -u \"$fullPath.out\" \"" . $result->stdoutFile . "\"", $output, $retCode);
         if ($retCode != 0) {
             $result->diffState = 'different';
 

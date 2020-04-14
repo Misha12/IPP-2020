@@ -1,6 +1,6 @@
 KOULE_PATH=test/tests/koule_pol.xml
 KOULE_STATS_DIR=data/koule_pol_stats.stats
-NATI_TESTS=../testy/interpret-only/
+NATI_TESTS=final_tests/int-only
 NATI_HTML=data/nati_int-tests.html
 NATI_TESTS_BOTH=../testy/both/
 NATI_HTML_BOTH=data/nati_both-tests.html

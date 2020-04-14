@@ -361,7 +361,7 @@ class Read(InstructionBase):
     def execute(self, program: Program):
         try:
             if program.input == stdin:
-                line = input()
+                line = input().rstrip()
             else:
                 line = program.input.readline().rstrip()
         except Exception:

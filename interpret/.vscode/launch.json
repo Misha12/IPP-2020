@@ -11,7 +11,8 @@
             "program": "${workspaceFolder}/interpret.py",
             "console": "integratedTerminal",
             "args": [
-                "--source=d:\\Google\\Drive\\School\\IPP\\projekt\\final_tests\\int-only-no-ext\\test_jumpifneq_differenttype_nil.src"
+                "--source=d:\\Google\\Drive\\School\\IPP\\projekt\\final_tests\\int-only\\kalkulacka_STACK_rozsireni.src",
+                "--input=d:\\Google\\Drive\\School\\IPP\\projekt\\final_tests\\int-only\\kalkulacka_STACK_rozsireni.in"
             ]
         },
         {
