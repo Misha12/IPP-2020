@@ -8,21 +8,26 @@ from stats import Stats
 
 
 class Program():
+    """ Definice aplikace, ktera se bude provadet. """
+
     def __init__(self, instructions: List, data_input: IO, stats: Stats):
+        # Datovy vstup pro instrukci read.
         self.input = data_input
+        # Aktualni pozice v programu.
         self.instruction_pointer = 0
-        self.GF: Dict[str, Symbol] = dict()
-        self.TF: Dict[str, Symbol] = None
-        self.LF_Stack: List[Dict[str, Symbol]] = list()
-        self.data_stack: List[Symbol] = list()
-        self.call_stack: List[int] = list()
-        self.exit_code = 0
-        self.stats = stats
+        self.GF: Dict[str, Symbol] = dict()                 # Globalni ramec
+        self.TF: Dict[str, Symbol] = None                   # Docasny ramec.
+        self.LF_Stack: List[Dict[str, Symbol]] = list()     # Lokalni ramec.
+        self.data_stack: List[Symbol] = list()              # Datovy zasobnik
+        self.call_stack: List[int] = list()                 # Zasobnik volani
+        self.exit_code = 0                                  # Navratovy kod
+        self.stats = stats                                  # Statistiky
 
         # <label, instructionPointerPosition>
         self.labels: Dict[str, int] = dict()
         self.instructions: List[instrs.InstructionBase] = list()
 
+        # Detekce navesti
         for instruction in instructions:
             if type(instruction) is instrs.Label:
                 if instruction.name.name in self.labels:
@@ -35,6 +40,8 @@ class Program():
                 self.instructions.append(instruction)
 
     def run(self):
+        """ Provadeni programu. """
+
         while len(self.instructions) > self.instruction_pointer:
             instruction = self.instructions[self.instruction_pointer]
             self.instruction_pointer += 1
@@ -45,6 +52,8 @@ class Program():
                 self.stats.increment_vars(self.GF, self.LF_Stack, self.TF)
 
     def var_exists(self, var: Variable):
+        """ Kontrola na existenci promenne. """
+
         if var.frame == Frames.GLOBAL:
             return var.value in self.GF
         elif var.frame == Frames.TEMPORARY:
@@ -61,6 +70,8 @@ class Program():
 
     def var_set(self, opcode: str, var: Variable, value: Symbol,
                 create: bool = False):
+        """ Nastaveni hodnoty promenne. Pripadne vytvořeni. """
+
         if not create and not self.var_exists(var):
             exit_app(exitCodes.UNDEFINED_VARIABLE,
                      '{}\nVariable {} not exists'.format(opcode, var.value),
@@ -74,6 +85,8 @@ class Program():
             self.TF[var.value] = value
 
     def var_get(self, opcode: str, var: Variable) -> Symbol:
+        """ Ziskani hodnoty promenne. """
+
         if not self.var_exists(var):
             exit_app(exitCodes.UNDEFINED_VARIABLE,
                      '{}\nVariable {} not exists'.format(opcode, var.value),
@@ -103,6 +116,8 @@ class Program():
         self.exit_code = code
 
     def get_state(self):
+        """ Ziskani stavu aplikace """
+
         return "\n".join([
             "Input type: {}".format(
                 'stdin' if self.input == stdin else 'file'),
@@ -116,6 +131,8 @@ class Program():
         ])
 
     def pop_stack(self, required_count: int):
+        """ Ziskani N hodnot ze zasovniku. """
+        
         if len(self.data_stack) < required_count:
             exit_app(exitCodes.UNDEFINED_VALUE,
                      'Invalid count of required arguments in stack at' +

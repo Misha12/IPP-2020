@@ -8,19 +8,41 @@ from models import (InstructionArgument, Symbol, Variable, Type, Label)
 
 
 class InstructionsParser():
+    """ Trida k nacitani a deserializaci vstupnich XML dat do internich struktur. """
 
     @staticmethod
     def parse_file(file: IO) -> Dict[int, instructions.InstructionBase]:
+        """ Nacteni XML dat z datoveho proudu a zpracovani. 
+
+        Perameters
+        ----------
+        file: IO
+            Vstupni datovy proud.
+
+        Returns
+        -------
+        Dict[int, instructions.InstructionBase]
+            Serazeny slovnik, kde klicem bude obsah XML atributu order.
+        """
         try:
-            return InstructionsParser.parse(file)
+            xml_data = parse_xml(file).getroot()
+            return InstructionsParser.parse(xml_data)
         except ParseError:
             exit_app(exitCodes.INVALID_XML_FORMAT, 'Invalid XML format.', True)
 
     @staticmethod
-    def parse(file: IO) -> Dict[int, instructions.InstructionBase]:
-        """ Nacitani XML dat a jejich rozbiti do struktur."""
+    def parse(xml_data: Element) -> Dict[int, instructions.InstructionBase]:
+        """ Nacitani XML dat a jejich rozbiti do struktur.
 
-        xml_data = parse_xml(file).getroot()
+        Parameters
+        ----------
+        xml_data: Element
+            Korenovy XML prvek.
+        Returns
+        -------
+        Dict[int, instructions.InstructionBase]
+            Serazeny slovnik, kde klicem bude obsah XML atributu order.
+        """
 
         if xml_data.tag != 'program':
             exit_app(exitCodes.INVALID_XML_STRUCT,
@@ -62,6 +84,19 @@ class InstructionsParser():
     @staticmethod
     def parse_instruction(element: Element, order: int) -> \
             instructions.InstructionBase:
+        """ Nacteni a zpracovani jedne instrukce.
+
+        Parameters
+        ----------
+        element: Element
+            XML element obsahujici data instrukce.
+        order: int
+            Poradi instrukce (bude pouzit pouze pri hlaseni chyb.)
+        Returns
+        -------
+        instructions.InstructionBase
+            Instance tridy konkretni instrukce.
+        """
         opcode = element.get('opcode')
 
         if opcode is None or len(opcode) == 0:
@@ -104,6 +139,17 @@ class InstructionsParser():
 
     @staticmethod
     def parse_arguments(element: Element) -> List[InstructionArgument]:
+        """ Nacteni parametru instrukce.
+
+        Parameters
+        ----------
+        element: Element
+            XML element obsahujici data instrukce.
+        Returns
+        -------
+        List[InstructionArgument]
+            Pole instanci parametru instrukce.
+        """
         arg1 = element.findall('arg1')
         arg2 = element.findall('arg2')
         arg3 = element.findall('arg3')
@@ -139,6 +185,18 @@ class InstructionsParser():
 
     @staticmethod
     def parse_argument(arg: Element) -> InstructionArgument:
+        """ Zpracovani parametru instrukce.
+
+        Parameters
+        ----------
+        arg: Element
+            XML element parametru.
+        Returns
+        -------
+        InstructionArgument
+            Zpracovany parametr.
+        """
+
         if len(list(arg)) > 0:
             exit_app(exitCodes.INVALID_XML_STRUCT,
                      'Argument contains unexpected elements.', True)
@@ -216,6 +274,8 @@ class InstructionsParser():
 
     @staticmethod
     def validate_scope(scope: str):
+        """ Kontrola platnosti ramce. """
+
         if scope != Frames.GLOBAL.value and scope != Frames.LOCAL.value and \
                 scope != Frames.TEMPORARY.value:
             exit_app(exitCodes.INVALID_XML_STRUCT,
@@ -223,6 +283,8 @@ class InstructionsParser():
 
     @staticmethod
     def validate_variable_name(name: str, is_label: bool = False):
+        """ Kontrola spravnosti nazvu promenne, nebo navesti. """
+
         if re.compile(r"^[_\-$&%*!?a-zA-Z][_\-$&%*!?a-zA-Z0-9]*$").match(name)\
                 is None:
             exit_app(exitCodes.INVALID_XML_STRUCT,
@@ -231,6 +293,8 @@ class InstructionsParser():
 
     @staticmethod
     def fix_string(value: str) -> str:
+        """ Osetreni retezce. Zpracovani escape sekvenci. """
+
         result: List[str] = list()
 
         splitedParts = value.split('\\')

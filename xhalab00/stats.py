@@ -4,6 +4,8 @@ from sys import argv
 
 
 class Stats():
+    """ Rozsireni statistik """
+
     def __init__(self, file: IO, insts_enabled: bool, vars_enabled: bool):
         self.file = file
         self.insts_count = 0

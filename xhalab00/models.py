@@ -3,10 +3,13 @@ from typing import Any, List
 
 
 class InstructionArgument():
+    """ Obecny model pro operandy. """
     arg_type: ArgumentTypes
 
 
 class Symbol(InstructionArgument):
+    """ Konstanta nebo promenna. """
+
     def __init__(self, data_type: DataTypes, value: Any):
         self.arg_type = ArgumentTypes.SYMBOL
         self.data_type = data_type
@@ -46,6 +49,8 @@ class Symbol(InstructionArgument):
 
 
 class Variable(InstructionArgument):
+    """ Operand promenna. """
+
     def __init__(self, frame: Frames, value: Any):
         self.arg_type = ArgumentTypes.VARIABLE
         self.frame = frame
@@ -53,12 +58,16 @@ class Variable(InstructionArgument):
 
 
 class Type(InstructionArgument):
+    """ Operand typ """
+
     def __init__(self, type: Any):
         self.arg_type = ArgumentTypes.TYPE
         self.type = type
 
 
 class Label(InstructionArgument):
+    """ Operand navesti """
+
     def __init__(self, name: str):
         self.arg_type = ArgumentTypes.LABEL
         self.name = name
