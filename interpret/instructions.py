@@ -579,7 +579,7 @@ class Jumpifeq(Jump):
 
         if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
                 symb2.is_nil():
-            if symb2.equals_value(symb1) or symb2.is_nil() or symb1.is_nil():
+            if symb2.equals_value(symb1):
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
@@ -598,8 +598,7 @@ class Jumpifneq(Jump):
 
         if symb2.equal_type(symb1.data_type) or symb1.is_nil() or\
                 symb2.is_nil():
-            if not symb2.equals_value(symb1) or symb2.is_nil() or\
-                    symb1.is_nil():
+            if not symb2.equals_value(symb1):
                 Jump.execute(self, program)
         else:
             exit_app(exitCodes.INVALID_DATA_TYPE,
