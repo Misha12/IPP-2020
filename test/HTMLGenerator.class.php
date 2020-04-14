@@ -200,7 +200,7 @@ header .created-at { display: flex; align-items: center; }";
             echo "<div class='test-result-data'><table><tr><th>Sekce: </th><td>" . dirname($keys[$i]) . "</td></tr><tr><th>Test:</th><td>" . basename($keys[$i]) . "</td></tr>";
 
             if (!$success)
-                echo "<tr class='test-result-table-error-text'><td colspan='2'>" . $test->getMessage() . "</td></tr>";
+                echo "<tr class='test-result-table-error-text'><td colspan='2'>" . implode("<br>", $test->getMessage()) . "</td></tr>";
 
             echo "</table></div><h2 class='test-result-status " . ($success ? 'success' : 'failed') . "'>" . ($success ? 'Úspěch' : 'Selhalo') . "</h2></div></div>";
         }

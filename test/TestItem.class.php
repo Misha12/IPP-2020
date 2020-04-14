@@ -50,13 +50,26 @@ class TestResult
      */
     public function getMessage()
     {
+        $pipeline = $this->parseResult != null && $this->intResult != null;
+
+        if ($pipeline) {
+            $res = $this->intResult->getMessage();
+            return $res != null ? [$res] : $res;
+        }
+
+        $messages = [];
+
         if ($this->parseResult != null)
-            return $this->parseResult->getMessage();
+            $messages['parse'] = $this->parseResult->getMessage();
 
         if ($this->intResult != null)
-            return $this->intResult->getMessage();
+            $messages['interpret'] = $this->intResult->getMessage();
 
-        return null;
+        $result = array_filter($messages, function ($item) {
+            return $item != null;
+        });
+
+        return count($result) == 0 ? null : $result;
     }
 }
 
@@ -282,7 +295,7 @@ class TestItem
         $dataRedirection = "< \"$fullPath.in\" > \"" . $result->stdoutFile . "\" 2> \"" . $result->stderrFile . "\"";
         $pythonExecutablePath = "python3.8 \"" . $config->intScript . "\" --source=\"$sourceCode\" $dataRedirection";
         exec($pythonExecutablePath, $output, $retCode);
-
+        
         $result->realExitCode = $retCode;
         if ($result->expectedExitCode != $retCode) return $result;
         if ($retCode != 0) return $result;

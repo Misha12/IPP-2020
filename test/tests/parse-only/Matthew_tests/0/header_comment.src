@@ -1,3 +1,0 @@
-.IPPcode20 #foo
-DEFVAR GF@counter
-MOVE GF@counter string@counter
