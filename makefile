@@ -5,6 +5,14 @@ NATI_HTML=data/nati_int-tests.html
 NATI_TESTS_BOTH=../testy/both/
 NATI_HTML_BOTH=data/nati_both-tests.html
 
+FINAL_TEST_BOTH=final_tests/both
+FINAL_TEST_BOTH_HTML=data/final_tests_both.html
+
+FINAL_TEST_INT=final_tests/int-only
+FINAL_TEST_INT_HTML=data/final_tests_int.html
+
+KOULE_FINAL=final_tests/koule_pol.xml
+
 int-only:
 	php test/test.php --int-script=interpret/interpret.py --directory=test/tests/int-only --recursive --int-only --debug > test-int.html
 
@@ -25,3 +33,8 @@ koule-pol-no-stats:
 
 nati-tests-both:
 	php test/test.php --int-script=interpret/interpret.py --parse-script=test/apps/parse.php --recursive --debug --directory=$(NATI_TESTS_BOTH) > $(NATI_HTML_BOTH)
+
+test-all-final:
+	php test/test.php --int-script=interpret/interpret.py --parse-script=test/apps/parse.php --recursive --debug --directory=$(FINAL_TEST_BOTH) > $(FINAL_TEST_BOTH_HTML)
+	python3.8 interpret/interpret.py --source=$(KOULE_FINAL)
+	php test/test.php --int-script=interpret/interpret.py --int-only --recursive --debug --directory=$(FINAL_TEST_INT) > $(FINAL_TEST_INT_HTML)
