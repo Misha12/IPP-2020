@@ -1,7 +1,0 @@
-.IPPcode20
-
-DEFVAR GF@a
-
-CREATEFRAME
-
-STRI2INT GF@a string@abc TF@undefined

@@ -1,7 +1,0 @@
-.IPPcode20
-
-DEFVAR GF@a
-
-TYPE GF@a string@Ahoj
-
-WRITE GF@a

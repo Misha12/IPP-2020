@@ -1,6 +1,0 @@
-.IPPcode20
-
-DEFVAR GF@a
-DEFVAR GF@b
-
-STRLEN GF@a GF@b

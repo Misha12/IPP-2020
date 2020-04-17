@@ -1,8 +1,0 @@
-.IPPcode20
-
-CREATEFRAME
-PUSHFRAME
-
-DEFVAR GF@a
-
-NOT GF@a LF@undef
